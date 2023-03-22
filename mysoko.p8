@@ -158,6 +158,8 @@ function moveplayer(dx,dy)
 		--box flag
 		if bx then
 			slidebox=bx
+			bx.dx=dx
+			bx.dy=dy
 		end
 	else
 		--no wall or box
@@ -318,7 +320,7 @@ function movebox()
 			b.y+=b.dy
 			b.sox=-b.dx*8--STARTING OFFSET
 			b.soy=-b.dy*8
-			b.ox,b.b.oy=b.sox,b.soy
+			b.ox,b.oy=b.sox,b.soy
 			
 			--set box turn???
 			_upd=boxloop
@@ -329,8 +331,8 @@ function movebox()
 		end
 end
 
-
 function boxloop()
+	btn_buffer()
 	p_t=min(p_t+.3,1)
 	boxslide(slidebox,p_t)
 	if p_t ==1 then
