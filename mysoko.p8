@@ -17,8 +17,8 @@ function _init()
 	
 	--FUTURE: CHANGE ARRAYS TO HAVE
 	--{START_ANI,#IN_ANI,SPEED}
-	--SPEED CAN DUPLICATE THINGS TO SLOW 
-	--IT DOWN OR CHANGE THE DIVISION
+	--SPEED CAN CHANGE DIV TO SLOW 
+	--OR SPEED ANIMATION
 	
 	tv_ani={162,162,163,163,164,164}
 	chord_ani={178,178,178,178,178,179,180,181}
@@ -29,13 +29,13 @@ function _init()
 	goal={}
 	slbx=nil --SLIDE BOX
 	
-	_upd=update_game --THE STATE
+	_upd=upd_game --THE STATE
 	_drw=draw_game
-	startgame()
+	init_game()
 	
 end
 
-function startgame()
+function init_game()
 	buttbuff=-1
 	p_x,p_y=1,5
 	p_ox,p_oy=0,0--PLAYER OFFSET
@@ -75,7 +75,7 @@ function _update()
 	_upd()
 end
 
-function update_game()
+function upd_game()
 	if talkwind then
  	if	get_input()==5 then
 			talkwind.dur=0--close box
@@ -179,7 +179,7 @@ function moveplayer(dx,dy)
 		p_soy=dy*8
 		p_ox,p_oy=0,0
 		
-		_upd=playerloop--set player loop
+		_upd=upd_player_loop--set player loop
 		p_mov=mov_bump--set to bump
 		--box flag
 		if bx then
@@ -200,7 +200,7 @@ function moveplayer(dx,dy)
 		p_soy=-dy*8
 		 
 		p_ox,p_oy=p_sox,p_soy
-		_upd=playerloop
+		_upd=upd_player_loop
 		p_mov=mov_walk--set to walk
 	end
 	p_t=0
@@ -208,7 +208,7 @@ end
 
 --this pauses player movement
 --to animate
-function playerloop()
+function upd_player_loop()
 	btn_buffer()
 	p_ani=loadani(p_anims[2])
 	p_t=min(p_t+0.3,1)
@@ -216,7 +216,7 @@ function playerloop()
 	if p_t==1 then
 		--call slide box
 		p_ani=loadani(p_anims[1])
-		_upd=update_game
+		_upd=upd_game
 		if slbx then
 			movebox()
 		end
@@ -356,18 +356,18 @@ function movebox()
 			slbx.soy=-slbx.dy*8
 			slbx.ox,slbx.oy=slbx.sox,slbx.soy
 			
-			_upd=boxloop
+			_upd=upd_box_loop
 			sfx(58)
 		end
 end
 
 --LOOP UNTIL BOX FINISHES MOVING
-function boxloop()
+function upd_box_loop()
 	btn_buffer()
 	p_t=min(p_t+.4,1)
 	boxslide(slbx,p_t)
 	if p_t ==1 then
-		_upd=update_game
+		_upd=upd_game
 		slbx=nil
 	end
 end
