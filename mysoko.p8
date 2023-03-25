@@ -14,17 +14,22 @@ function _init()
 	cam_y=0
 	cam_x=0
 	
-	--{REG,MOV,}
+	
 	p_anims={112,116}
 	p_ani=loadani(p_anims[1])
 	
+	anims={}
+	grids={}
+
+	coinani={168,168,168,168,170,172,174}
+
+
+	dpal={0,1,1,2,1,13,6,4,4,9,3,13,1,13,14}
 	--FUTURE: CHANGE ARRAYS TO HAVE
 	--{START_ANI,#IN_ANI,SPEED}
 	--SPEED CAN CHANGE DIV TO SLOW 
 	--OR SPEED ANIMATION
- dpal={0,1,1,2,1,13,6,4,4,9,3,13,1,13,14}
-	tv_ani={162,162,163,163,164,164}
-	chord_ani={178,178,178,178,178,179,180,181}
+
 	dirx={-1,1,0,0,1,1,-1,-1}
 	diry={0,0,-1,1,-1,1,1,-1}
 	
@@ -32,7 +37,7 @@ function _init()
 	goal={}
 	lock={0,0,0}
 	slock=3--SIZE LOCK
-	coinani={168,168,168,168,170,172,174}
+	
 	slbx=nil --SLIDE BOX
 	
 	init_menu()
@@ -95,6 +100,148 @@ end
 
 -->8
 --draw
+--______________________________new animation system
+
+--WORKS FOR 2x2 AND SINGLE FRAME ANIMS
+function create_ani_list(_sa,_ea,_delay,grid)
+	local _ani={}
+	--add delay
+	if _delay>0 then
+		for x=0,_delay do
+			add(_ani,_sa)
+		end
+	end
+	--add normal frames
+
+	local length=_ea
+	local skip=0
+	if grid then
+		length=(_ea-_sa)/2+_sa
+	end
+	for x=_sa,length do
+		add(_ani,x+skip)
+		if grid then
+			skip+=1
+		end
+	end
+	return _ani
+
+end
+
+function add_ani(_sa,_ea,_delay,_spd,_x,_y,_flp)
+	local _ani = create_ani_list(_sa,_ea,_delay,false)
+	local a={
+		ani=_ani,
+		spd=_spd,--SPD OF ANI LOWER BETTER?
+		x=_x,
+		y=_y,
+		flp=_flp
+
+	}
+	add(anims,a)
+end
+
+
+
+function basic_ani()
+	for a in all(anims) do
+		fm=getframe(a.ani)
+		drawspr(fm,a.x,a.y,a.flp)
+	end
+end
+
+--ONLY ADD 2x2 ANIMATED GRIDS
+function add_grid(_sa,_ea,_delay,_spd,_x,_y,_w,_h)
+	
+	local _ani=create_ani_list(_sa,_ea,_delay,true)
+	
+	local a={
+		ani=_ani,
+		spd=_spd,
+		x=_x,
+		y=_y,
+		w=_w,
+		h=_h
+
+	}
+	add(grids,a)
+end
+
+function drawgrids()
+	for g in all(grids) do
+		--SINCE LOOP STARTS AT 0
+		gw,gh=g.w-1, g.h-1	
+		for x=0,gw do
+			for y=0,gh do
+				sp=getframe(g.ani,g.spd)
+				drawspr(y*16+sp+x,g.x+x*8,g.y+y*8,false)
+			end
+		end
+	end
+end
+
+function sdrawgrid(stspr,_x,_y,_w,_h)
+	_w,_h=_w-1,_h-1--since start 0	
+	for x=0,_w do
+		for y=0,_h do		
+			drawspr(y*16+stspr+x,_x+x*8,_y+y*8,false)
+		end
+	end
+end
+
+function getframe(ani,spd)
+	return ani[flr(t/spd)%ani.ea+1]
+end
+
+function drawspr(_spr,_x,_y,_flp)
+	spr(_spr,_x,_y,1,1,_flp)	
+end
+
+function drawgamestuff()
+
+	anims={}
+	grids={}
+	--draw desk
+	---------------
+	sdrawgrid(128,cam_x+2*8,cam_y+1*8,3,2)
+	---------------
+	--tv
+	add_ani(162,164,0,2,cam_x+3*8,cam_y+1*8,false)
+	--monitor
+	add_ani(178,181,4,4,cam_x+4*8,cam_y+1*8,false)
+	--coin
+	add_grid(168,174,4,4,16*3+cam_x+5*8,cam_y+1*8,2,2)
+
+	--lower bar
+	for x=0,15 do
+		drawspr(160,cam_x+x*8,cam_y+24,false)
+	end
+	--draw lock
+	basic_ani()
+	drawgrids()
+	drawlock()
+end
+
+
+function drawbox(b)
+ 	drawspr(b.tle,b.x*8+b.ox,b.y*8+b.oy,false)
+end
+
+function drawlock()
+	for i=1,slock do
+		local _spr
+		if lock[i]==1 then
+			_spr=137
+		else
+			_spr=131
+		end
+		sdrawgrid(_spr,16*(i-1)+cam_x+5*8,cam_y+1*8,2,2)
+	end
+		--draw coin
+		
+end
+
+--______________________________
 
 function _draw()
 	_drw()
@@ -118,64 +265,18 @@ function draw_game()
 	for b in all(box) do
 		drawbox(b)
 	end
-	
- drawspr(getframe(p_ani),p_x*8+p_ox,p_y*8+p_oy,p_flp)
- drawtv()
- --RETURN TRANSPARENCY COLR
+	--draw player
+	drawspr(getframe(p_ani),p_x*8+p_ox,p_y*8+p_oy,p_flp)
+	--draw everything else in the game
+	drawgamestuff()
+
+
+ 	--RETURN TRANSPARENCY COLR
 	palt(0,true)
 	palt(14,false)
 end
 
-function drawspr(_spr,_x,_y,_flp)
 
-	
-	spr(_spr,_x,_y,1,1,_flp)
-	
-end
-
-function drawbox(b)
- 	drawspr(b.tle,b.x*8+b.ox,b.y*8+b.oy)
-end
-
-function drawtv()
-	--draw desk
-	drawgrid(128,cam_x+2*8,cam_y+1*8,3,2)
-	--monitor and chord
-	drawspr(getframe(tv_ani),cam_x+3*8,cam_y+1*8,false)
-	drawspr(getframe(chord_ani),cam_x+4*8,cam_y+1*8,false)
-	
-	--lower bar
-	for x=0,15 do
-		drawspr(160,cam_x+x*8,24,false)
-	end
-	--draw lock
-	drawlock()
-	
-end
-
-function drawlock()
-	for i=1,slock do
-		local _spr
-		if lock[i]==1 then
-			_spr=137
-		else
-			_spr=131
-		end
-		drawgrid(_spr,16*(i-1)+cam_x+5*8,cam_y+1*8,2,2)
-	end
-		drawgrid(getframe(coinani),16*(3)+cam_x+5*8,cam_y+1*8,2,2)
-end
-
---startsprite
-function drawgrid(stspr,_x,_y,_w,_h)
-	_w,_h=_w-1,_h-1--since start 0	
-	for x=0,_w do
-		for y=0,_h do		
-			drawspr(y*16+stspr+x,_x+x*8,_y+y*8,false)
-		end
-	end
-	
-end
 --tool
 
 function oprint8(_t,_x,_y,_c,_c2)
@@ -497,10 +598,6 @@ function addgoal(tle,gx,gy)
 	add(goal,g)
 end
 
-
-
-
-
 --box movement
 function addbox(btle,bx,by) 
 	local b={
@@ -691,8 +788,8 @@ __gff__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000808182000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000909192000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2323232323232323232323232323232300222222222222222222222222222222220022222222222222222222222222222222002222222222222222222222222222222200222222222222222222222222222222220022222222222222222222222222222222002222222222222222222222222222222200000000000000000000
 2304040404042304230404040404042300220101010101220101222201010101220022010101010122010122222201010122002201010101012201220101010101012200220101010101220122010101010101220022010101010122010122220101010122002201010101012201012222222222222200000000000000000000
