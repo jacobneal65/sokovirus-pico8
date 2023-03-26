@@ -102,17 +102,14 @@ function upd_game()
 			end
 		else
 			_upd=upd_level
-		end
-		
+		end		
 		fadeout(0.5)
 		--sfx(54)
 	end
 end
 
-
 -->8
 --draw
---______________________________new animation system
 
 --WORKS FOR 2x2 AND SINGLE FRAME ANIMS
 function create_ani_list(_sa,_ea,_delay,grid)
@@ -137,7 +134,6 @@ function create_ani_list(_sa,_ea,_delay,grid)
 		end
 	end
 	return _ani
-
 end
 
 function add_ani(_sa,_ea,_delay,_spd,_x,_y,_flp)
@@ -148,7 +144,6 @@ function add_ani(_sa,_ea,_delay,_spd,_x,_y,_flp)
 		x=_x,
 		y=_y,
 		flp=_flp
-
 	}
 	add(anims,a)
 end
@@ -210,7 +205,6 @@ function drawspr(_spr,_x,_y,_flp)
 end
 
 function drawgamestuff()
-
 	--draw player
 	add_ani(p_ani,p_ani+3,0,6,p_x*8+p_ox,p_y*8+p_oy,p_flp)
 	--monitor
@@ -230,7 +224,6 @@ function drawgamestuff()
 	drawlock()
 end
 
-
 function drawbox(b)
  	drawspr(b.tle,b.x*8+b.ox,b.y*8+b.oy,false)
 end
@@ -247,8 +240,6 @@ function drawlock()
 	end
 		
 end
-
---______________________________
 
 function _draw()
 	grids={}
@@ -581,7 +572,7 @@ function upd_menu()
 	if btnp(❎) then
 		fadeout()
 		init_hub()
-		--sfx(59)
+		sfx(59)
 	end
 end
 
@@ -637,8 +628,7 @@ function movebox()
 		slbx.soy=slbx.dy*8
 		slbx.ox,slbx.oy=0,0
 	else
-		--PUSH BLOCK
-		
+		--PUSH BLOCK	
 		slbx.x+=slbx.dx--SET NEW DESTINATION
 		slbx.y+=slbx.dy
 		slbx.sox=-slbx.dx*8--STARTING OFFSET
@@ -672,8 +662,8 @@ function boxbump(p_t)
 	if tme>0.5 then
 		tme=1-p_t
 	end
-		slbx.ox=slbx.sox*tme
-		slbx.oy=slbx.soy*tme
+	slbx.ox=slbx.sox*tme
+	slbx.oy=slbx.soy*tme
 end
 
 -->8
@@ -684,7 +674,6 @@ function init_hub()
 	_drw=drw_hub
 	hubsel=0
 end
-
 
 function upd_hub()
 	hubinput()
@@ -705,7 +694,6 @@ function hubinput()
 			sfx(51)
 			selworld()
 		end
-		
 	end
 end
 
@@ -715,7 +703,6 @@ function selworld()
 	init_game(hubsel)
 	fadeout()
 end
-
 
 function drw_hub()
 	cls()
@@ -741,12 +728,9 @@ function drw_hub()
 		print(servertext[i],26,ys+1,colr)
 		local colr=3
 	end
-
 	draw_bas_ani()
 	drawgrids()
 end
-
-
 
 __gfx__
 000000000000000000000000000000000000000001000010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee3bbbbbb30000000000000000
