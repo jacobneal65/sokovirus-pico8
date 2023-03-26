@@ -15,6 +15,8 @@ function _init()
 	cam_x=0
 	debug={}
 	level=0
+	completed_worlds={0,0,0}
+
 	p_ani=112
 	--normal,squish up, squish right
 	p_anims={112,116,120}
@@ -59,8 +61,10 @@ function init_game()
 	
 	wind={}--WINDOW ARRAY
 	talkwind=nil
-	
-	
+	--SET THE LEVEL
+	--0,4,8=LEVEL 1,5,9
+	--(THE UPD LEVEL INCREASES THE NUMBER BY 1)
+	level=hubsel*4
 	
 	_upd=upd_level
 	_drw=draw_game
@@ -696,7 +700,7 @@ end
 function selworld()
 	--worlds: 1-5
 	level=0--start level 1 less,
-	init_game()
+	init_game(hubsel)
 	fadeout()
 end
 
