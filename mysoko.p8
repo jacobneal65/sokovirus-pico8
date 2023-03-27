@@ -14,7 +14,7 @@ function _init()
 	cam_x,cam_y=0,0
 	
 	servertext={"server 1","server 2","server 3"}
-
+	hubtext={">password: **********",">ls server 132.55.23.1.8080",">select a server to begin"}
 	p_ani=112
 	--normal,squish up, squish right
 	p_anims={112,116,120}
@@ -426,7 +426,7 @@ end
 function upd_level()
 	modlvl=level%worldlevels
 	level+=1
-	debug[1]="level "..level
+	--debug[1]="level "..level
 	
 	local lx=levelx[level]
 	local ly=levely[level]
@@ -669,6 +669,7 @@ end
 -->8
 --hub
 function init_hub()
+	cam_x,cam_y=0,0
 	camera(0,0)
 	_upd=upd_hub
 	_drw=drw_hub
@@ -703,7 +704,14 @@ function selworld()
 	init_game(hubsel)
 	fadeout()
 end
-
+--hubtext
+function printhubtext()
+	local offset=0
+	for i=1,#hubtext do
+		print(hubtext[i],8,5*8+offset,3)
+		offset+=8
+	end
+end
 function drw_hub()
 	cls()
 	map()
@@ -712,8 +720,9 @@ function drw_hub()
 	add_grid(37,43,4,4,16*3+cam_x+5*8,cam_y+1*8,2,2)
 	--draw cursor
 	add_ani(2,3,3,10, 8,8*(10+2*(hubsel)), false)
-
+	printhubtext()
 	for i=1,3 do
+		local t =""
 		local colr=3
 		local ys=8*(10+2*(i-1))
 		if i==(hubsel+1) then
@@ -724,8 +733,9 @@ function drw_hub()
 			line(8*2,ys,8*3-1,ys+7,8)
 			line(8*3-1,ys,8*2,ys+7,8)
 			colr=5
+			t=" [error 404]"
 		end
-		print(servertext[i],26,ys+1,colr)
+		print(servertext[i]..t,26,ys+1,colr)
 		local colr=3
 	end
 	draw_bas_ani()
@@ -734,12 +744,12 @@ end
 
 __gfx__
 000000000000000000000000000000000000000001000010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee3bbbbbb30000000000000000
-000000000000000000330000000000000666666001000010e55555eeee6ee6eee656565eeeddddeeeeeeeeeeeeeeeeeeeeeeeeeeb3bbbb3b0000000000000000
-007007000000000000003300000000000633336001000010e522225ee555555ee777775eed1111deeeeeeeeeeeeeeeeeeeeeeeeebb3bb3bb0000000000000000
+000000000000000000003000000000000666666001000010e55555eeee6ee6eee656565eeeddddeeeeeeeeeeeeeeeeeeeeeeeeeeb3bbbb3b0000000000000000
+007007000000000000000300000000000633336001000010e522225ee555555ee777775eed1111deeeeeeeeeeeeeeeeeeeeeeeeebb3bb3bb0000000000000000
 000770000000000000000030000000000633336001000010e522225ee522225ee7ddd75eed1dd1de4eeeeeeeeeeeeeeeeeeeeeeebbb33bbb0000000000000000
-000770000000000000000030000000000666b86001055010e555555ee522225ee777775eed1dd1de4eeeeeeeeeeeeeeeeeeeeeeebbb33bbb0000000000000000
-007007000005000000003300000000000665566005666650e599995ee555555ee7ddd75eed1111de4eeeeeeeeeeeeeeeeeeeeeeebb3bb3bb0000000000000000
-00000000000000000033000000000000066666600566b850e5aaaa5eee6ee6eee77777eeeeddddee54eeeeeeeeeeeeeeeeeeeeeeb3bbbb3b0000000000000000
+000770000000000000000300000000000666b86001055010e555555ee522225ee777775eed1dd1de4eeeeeeeeeeeeeeeeeeeeeeebbb33bbb0000000000000000
+007007000005000000003000000000000665566005666650e599995ee555555ee7ddd75eed1111de4eeeeeeeeeeeeeeeeeeeeeeebb3bb3bb0000000000000000
+00000000000000000000000000000000066666600566b850e5aaaa5eee6ee6eee77777eeeeddddee54eeeeeeeeeeeeeeeeeeeeeeb3bbbb3b0000000000000000
 000000000000000000000000000000000555555005555550eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee54eeeeeeeeeeeeeeeeeeeeee3bbbbbb30000000000000000
 111111505505555500000000000000000000000006666660e464464ee444444e6555555600000ddd54eeeeee666ddddddddddddd000000000000000000000000
 11111150dd0ddddd00000000000000000000000006bbbb6046444464444444446666666600000d8de54eeeeedddddd555555555d000000000000000000000000
