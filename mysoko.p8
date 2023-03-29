@@ -14,13 +14,22 @@ function _init()
 	cam_x,cam_y=0,0
 	level=0--start level 1 less
 	servertext={"server 1","server 2","server 3"}
-	hubtext={">password: **********",">ls server 132.55.23.1.8080",">select a server to begin"}
 	p_ani=112
 	--normal,squish up, squish right
 	p_anims={112,116,120}
 	levelx={17,34,51,68,85,102,0,17,34,51,68,85,102}
 	levely={0,0,0,0,0,0,16,16,16,16,16,16,16}
-	
+	hubtext = {
+		{">password: **********",
+		">ipscan 132.55.23.1.8080",
+		">select a server to begin"},
+		{">message from employer:",
+		">server 1 destroyed",
+		">two more to go. . ."},
+		{">message from employer:",
+		">server 2 destroyed",
+		">two more to go. . ."},
+	}
 	notrestart=true--skip check solved if restart
 	playerlx={}
 	playerly={}
@@ -74,7 +83,7 @@ end
 -->8
 --update
 
-function _update60()
+function _update()
 	t+=1--where we are in the anim
 	_upd()
 end 
@@ -582,25 +591,92 @@ end
 --(will move to ui when done)
 
 function init_menu()
+	frame=0
+	msg={
+		lines={},
+		pos=0,
+		rate=2,
+		len=0
+	     }
+	     
+	lines={
+		"----------------------",
+		">access first database",
+		">load user 42.42.10",
+		">execute server scan",
+		".  .  ."
+	     }
+	setmsg(lines)
+	
+	wnd={l=10,t=10}     
+
+	
+
 	_upd=upd_menu
 	_drw=drw_menu
 	--music(1,0)
 end
 
+function updatemessage()
+	if (frame%msg.rate==0) then
+		msg.pos+=1
+	end   
+	frame+=1
+end
+
 function upd_menu()
+	updatemessage()
 	if btnp(❎) then
 		fadeout()
 		init_hub()
 		--init_level()--for debuging levels
-
 		sfx(59)
 	end
 end
 
 function drw_menu()
 	cls()
-	oprint8("press ❎ to start",30,50+sin(time()),7,13)
+	drawmessage()
+	oprint8("press ❎ to start",30,80+sin(time()),7,13)
 
+end
+
+function drawmessage()
+	offset=0
+	y=0
+
+	if(frame%msg.rate==0 and msg.pos<msg.len) then
+		if sfx1 then
+			sfx(50)
+		else
+			sfx1=true
+		end
+	end
+	for l in all(msg.lines) do
+		off=msg.pos-offset
+		if (off<0) then
+			break
+		end
+
+		linepos=min(#l,off)
+		if l[linepos]==" " then
+			sfx1=false
+		end
+		out=sub(l,0,linepos)
+		print(out,wnd.l+5,wnd.t+y+5,3)
+		offset+=#l
+		y+=6
+	end
+end
+
+function setmsg(lines)
+	msg.lines=lines
+	msg.pos=0
+	msg.len=0
+	sfx1=false
+	for l in all(lines) do
+	 msg.len+=#l
+	end
 end
 
 -->8
@@ -689,15 +765,53 @@ end
 
 -->8
 --hub
+
+function sethubtext()
+	local c = completedworlds
+	if cmplist(c,{0,0,0}) then
+		return hubtext[1]
+	elseif cmplist(c,{1,0,0}) then
+		return hubtext[2]
+	elseif cmplist(c,{0,1,0}) then
+		return hubtext[3]
+	
+	end
+
+
+	return ""
+end
+
+function cmplist(_a,_b)
+	for i=1,#_a do
+		if _a[i]!=_b[i] then
+			return false
+		end
+	end
+	return true
+end
+
+
 function init_hub()
 	cam_x,cam_y=0,0
 	camera(0,0)
+	hubsel=0
+	msg={
+		lines={},
+		pos=9,
+		rate=2,
+		len=0
+	     }
+	wnd={l=9,t=40}        
+	lines=sethubtext()
+
+	setmsg(lines)
+
 	_upd=upd_hub
 	_drw=drw_hub
-	hubsel=0
 end
 
 function upd_hub()
+	updatemessage()
 	hubinput()
 end
 
@@ -725,14 +839,6 @@ function selworld()
 	init_level()
 	fadeout()
 end
---hubtext
-function printhubtext()
-	local offset=0
-	for i=1,#hubtext do
-		print(hubtext[i],8,5*8+offset,3)
-		offset+=8
-	end
-end
 function drw_hub()
 	cls()
 	map()
@@ -741,7 +847,7 @@ function drw_hub()
 	add_grid(37,43,4,4,16*3+cam_x+5*8,cam_y+1*8,2,2)
 	--draw cursor
 	add_ani(2,3,3,10, 8,8*(10+2*(hubsel)), false)
-	printhubtext()
+	drawmessage()
 	for i=1,3 do
 		local t =""
 		local colr=3
@@ -915,7 +1021,7 @@ cd1400202c3002a3122a3002a3102c2112c3102c3122a300273002e3122c3002e3122c3002a30027
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+490100001b51006540065401953018530005000050000500045000350002500015000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500
 71100000290551e0001e0000000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005
 711000001d0551e0001e0000000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005
 000100000e0500f050100501105014050170501b0501e0502205024050170500a050010501c0001c0001d00000000000000000000000000000000000000000000000000000000000000000000000000000000000
