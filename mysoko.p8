@@ -16,7 +16,7 @@ function _init()
 	servertext={"server 1","server 2","server 3"}
 	p_ani=112
 	--normal,squish up,squish right
-	p_anims={112,116,120}
+	p_anims={112,117,122}
 	--camera pos per lvl
 	levelx={17,34,51,68,85,102,0,17,34,51,68,85,102}
 	levely={0,0,0,0,0,0,16,16,16,16,16,16,16}
@@ -236,9 +236,9 @@ function drawspr(_spr,_x,_y,_flp)
 end
 
 function drawgamestuff()
-	
+	--(sa,ea,delay,spd,x,y,flp)
 	--draw player
-	add_ani(p_ani,p_ani+3,0,6,p_x*8+p_ox,p_y*8+p_oy,p_flp)
+	add_ani(p_ani,p_ani+4,4,4,p_x*8+p_ox,p_y*8+p_oy,p_flp)
 	--monitor
 	add_ani(96,98,0,6,cam_x+3*8,cam_y+1*8,false)
 	--chord
@@ -777,6 +777,10 @@ function upd_box_loop()
 	btn_buffer()
 	p_t=min(p_t+.4,1)
 	slbx.mov(p_t)
+	spawntrail(
+	slbx.x*8+slbx.ox+4,
+	slbx.y*8+slbx.oy+4)
+	
 	if p_t==1 then
 		_upd=upd_game
 		slbx=nil
@@ -866,8 +870,8 @@ function hubinput()
 			sfx(58)
 		else
 			sfx(51)
-			--level=hubsel*4
-			 level=5-- (used for debuging)
+			level=hubsel*4
+			--level=5-- (used for debuging)
 			selworld()
 		end
 	end
@@ -912,43 +916,56 @@ end
 --particles
 
 -- add a particle
-function addpart(_x,_y,_type,_maxage,_col,_col2,_col3)
+function addpart(_x,_y,_type,_maxage,_col)
 	local _p = {}
 	_p.x=_x
 	_p.y=_y
 	_p.tpe=_type
 	_p.mage=_maxage
 	_p.age=0
-	_p.col=_col
-	_p.col2=_col2	
-	_p.col3=_col3	
+	_p.col=0
+	_p.c0larr=_col
+
 	add(part,_p)
 end
 
 -- spawn a trail
 function spawntrail(_x,_y)
-	local _ang=rnd()
-	local _ox=sin(_ang)*2*.6
-	local _oy=cos(_ang)*2*.6
-	addpart(_x+_ox,_y+_oy,0,
-	15+rnd(10),11,3,1)
+	if rnd()<0.5 then
+		local _ang=rnd()
+		local _ox=sin(_ang)*2*.6
+		local _oy=cos(_ang)*2*.6
+		addpart(_x+_ox,_y+_oy,0,
+		15+rnd(10),{11,3,1})
+	end
 end
+
+
+--place brick in slot
+function shatterparticle()
+	--21:10 in breakout 38
+end
+
 
 function updateparts()
 	local _p
 	for i=#part,1,-1 do
 		_p=part[i]
 		_p.age+=1
-		debug[1]=_p.col2.."/".._p.col3
 		local agperc=_p.age/_p.mage
 		if _p.age > _p.mage then
 			del(part,part[i])
 		--if the particle is halfage,
 		--change col to old col
-		elseif agperc>0.75 then
-  	_p.col=_p.col3
-		elseif agperc>0.5 then  	
-  	_p.col=_p.col2
+		else
+			if #_p.c0larr==1 then
+				_p.col = _p.c0larr[1]
+			end
+			--AGPERC 0->1
+			--FLR(PERCENT*#ARRAY)
+			-- = THE INDEX OF THE COLOR
+			local _ci =1+flr(agperc*#_p.c0larr)
+			_p.col = _p.c0larr[_ci]
 		end
 	end
 end
@@ -1021,14 +1038,14 @@ eeebb566eee3b566eeeb356655eeeeee55eeeeee55eeeeee55eeeeee000000000000000000000000
 eee3b566eeeb3566eeebb56665ee55ee65ee55ee65eeccee65ee55ee000000000000000000000000000000000000000000000000000000000000000000000000
 eeee3566eeeeb566eeeeb56665e5ee5e65ecee5e65e5ee5e65e5eece000000000000000000000000000000000000000000000000000000000000000000000000
 eeee5555eeee5555eeee5555555eeee555ceeee5555eeee5555eeeec000000000000000000000000000000000000000000000000000000000000000000000000
-ee1eeeeeee1eeeeeee1eeeeeee7eeeeeeee1eeeeeee1eeeeeee1eeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000
-e761eeeee161eeeee167eeeee767eeeeee76eeeeee16eeeeee16eeeeee76eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000
-e7661eeee1661eeee1667eeee7661eeeee76eeeeee16eeeeee16eeeeee76eeeeee1eeeeeee1eeeeeee1eeeeeee7eeeee00000000000000000000000000000000
-e76661eee16661eee16667eee76661eeee761eeeee161eeeee167eeeee761eeee761eeeee161eeeee161eeeee167eeee00000000000000000000000000000000
-e766661ee166661ee166667ee166661eee7661eeee1661eeee1667eeee1661eee766661ee166661ee166667ee166661e00000000000000000000000000000000
-e76611eee76677eee16617eee16611eeee761eeeee767eeeee167eeeee161eeeee1161eeee7761eeee1167eeee1161ee00000000000000000000000000000000
-ee1161eeee7767eeee1167eeee1161eeeee11eeeeee77eeeeee17eeeeee11eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000
+ee1eeeeeee1eeeeeee1eeeeeee1eeeeeee7eeeeeeee1eeeeeee1eeeeeee1eeeeeee1eeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000
+e161eeeee761eeeee161eeeee167eeeee767eeeeee16eeeeee76eeeeee16eeeeee16eeeeee76eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000
+e1661eeee7661eeee1661eeee1667eeee7661eeeee16eeeeee76eeeeee16eeeeee16eeeeee76eeeeee1eeeeeee1eeeeeee1eeeeeee1eeeeeee7eeeee00000000
+e16661eee76661eee16661eee16667eee76661eeee161eeeee761eeeee161eeeee167eeeee761eeee161eeeee761eeeee161eeeee161eeeee167eeee00000000
+e166661ee766661ee166661ee166667ee166661eee1661eeee7661eeee1661eeee1667eeee1661eee166661ee766661ee166661ee166667ee166661e00000000
+e16611eee76611eee76677eee16617eee16611eeee161eeeee761eeeee767eeeee167eeeee161eeeee1161eeee1161eeee7761eeee1167eeee1161ee00000000
+ee1161eeee1161eeee7767eeee1167eeee1161eeeee11eeeeee11eeeeee77eeeeee17eeeeee11eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000
 __gff__
 0000000000000000000000000000000001000101010000000000000000000000000001000100000000000000000000000000010101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
