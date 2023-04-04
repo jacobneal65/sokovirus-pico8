@@ -68,6 +68,12 @@ function _init()
 	--particles
 	part={}
 	
+	--scanline stuff
+	showscan=true
+	yscan=39
+	yscanstart=39
+	yscanend=120-42+1
+	
 	init_menu()
 	
 end
@@ -912,6 +918,7 @@ function drw_hub()
 	end
 	draw_bas_ani()
 	drawgrids()
+	draw_scanline()
 end
 
 -->8
@@ -1016,6 +1023,40 @@ function drawparts()
 end
 
 
+-->8
+function draw_scanline()
+	--(_x,_y,_w,_h,_c)
+	if showscan then
+		rectfill2(6,yscan,116,1,3)
+		rectfill2(6,yscan+41,116,1,3)
+
+		showscan = false
+	else
+		showscan = true
+		if yscan >= yscanend then
+			yscan = yscanstart
+		else
+			yscan+=1
+		end
+		showscan=true
+	end
+
+	-- if scanline==nil then scanline=36 end
+	-- if scanline_visible then
+	-- 	for i=0,127 do
+	-- 		if pget(i,scanline)==11 then
+	-- 			pset(i,scanline,3)
+	-- 		end
+	-- 	end
+	-- 	scanline_visible=false
+	-- else
+	-- 	scanline_visible=true		
+	-- 	scanline+=1
+	-- 	if scanline>58 then
+	-- 		scanline=32
+	-- 	end
+	-- end
+end
 __gfx__
 000000000000000000000000000000000000000001000010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee4ee4eeeeee3bbbbbb3eeeeeeee00000000
 000000000000000000003000000000000666666001000010e55555eeee6ee6eee656565eeeddddeee3eeee3eee5554ee4e4eeeeeb3bbbb3beeeeeeee00000000
