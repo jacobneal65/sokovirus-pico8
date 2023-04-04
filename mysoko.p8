@@ -1028,8 +1028,7 @@ end
 function draw_scanline()
 	--(_x,_y,_w,_h,_c)
 	if showscan then
-		rectfill2(6,yscan,116,1,3)
-		--rectfill2(6,yscan+41,116,1,3)
+		rectfill2(cam_x+6,cam_y+yscan,116,1,3)
 
 		showscan = false
 	else
