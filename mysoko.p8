@@ -53,6 +53,7 @@ function _init()
 		">complete the last job.",
 		">your pay will be $_,___."},
 	}
+	
 	notrestart=true--skip check solved if restart
 	--player location given the level
 
@@ -303,7 +304,7 @@ function _draw()
 	--draw debug
 	local offst=0
 	for txt in all(debug) do
-		print(txt,cam_x+90,cam_y+offst,8)
+		print(txt,cam_x+10,cam_y+offst,8)
 		offst+=8
 	end
 end
@@ -506,8 +507,7 @@ function upd_codeslide()
 	p_t=min(p_t+0.1,1)
 	p_ani=p_anims[4]
 	p_mov() --moves the player offset by
-	--trail particle
-	particlecode(p_x*8+p_ox,p_y*8+p_oy)
+	particlecode(p_x*8+p_ox,p_y*8+p_oy)--code trail particle
 	if p_t==1 then
 		particlepuff(p_x*8,p_y*8)
 		--call slide box
@@ -784,9 +784,13 @@ end
 
 
 function init_hub()
+	hubsel=0
+	hub_x, hub_y=0,8*(10+2*hubsel)
+	hub_oy=0
+	
 	cam_x,cam_y=0,0
 	camera(0,0)
-	hubsel=0
+	
 	msg={
 		lines={},
 		pos=0,
@@ -802,61 +806,87 @@ function init_hub()
 	_drw=drw_hub
 end
 
+function hubinput()
+	local _btn=getinput()
+	if _btn==⬆️ then	--up
+		prevhubsel=hubsel
+		hubsel=(hubsel-1)%3
+		sfx(52)--move cursor noise
+		init_hubmove()
+	elseif _btn==⬇️ then--down
+		prevhubsel=hubsel
+		hubsel=(hubsel+1)%3
+		sfx(52)--move cursor noise
+		init_hubmove()
+	elseif _btn==5 then
+		if completedworlds[hubsel+1]==1 then
+			sfx(61)--cant choose world
+		else
+			sfx(51)--select noise
+			level=hubsel*4+1
+			--level=8-- (used for debuging)
+			init_level()
+			fadeout()
+		end
+	end
+end
+function init_hubmove()
+	p_t=0
+	if prevhubsel + hubsel == 2 then--if we are going from 0->2 or 2->0
+		hub_oy=0
+		p_t=1
+	else
+		hub_soy=16*(prevhubsel-hubsel)
+		hub_oy=hub_soy
+	end
+	hub_y=8*(10+2*(hubsel))
+	_upd = upd_hubcursor_loop
+end
+
+--used to move the cursors and shake them
+function upd_hubcursor_loop()
+	--slide
+	p_t=min(p_t+0.4,1)
+	hub_oy=hub_soy*(1-p_t)
+	--shake
+
+	--return hub control
+	if p_t==1 then
+		_upd = upd_hub
+	end
+	 
+end
+
 function upd_hub()
 	updatemessage()
 	hubinput()
 end
 
-function hubinput()
-	local _btn=getinput()
-	if _btn==⬆️ then	--up
-		hubsel=(hubsel-1)%3
-		sfx(52)--move cursor noise
-	elseif _btn==⬇️ then--down
-		hubsel=(hubsel+1)%3
-		sfx(52)--move cursor noise
-	elseif _btn==5 then
-		if completedworlds[hubsel+1]==1 then
-			sfx(58)--can choose world
-		else
-			sfx(51)--select noise
-			level=hubsel*4+1
-			--level=8-- (used for debuging)
-			selworld()
-		end
-	end
-end
-
-function selworld()
-	--worlds: 1-5
-	init_level()
-	fadeout()
-end
 function drw_hub()
 	cls()
 	map()
-	--sa,ea,delay,spd
 	--draw coin
 	--add_grid(37,43,4,4,16*3+cam_x+5*8,cam_y+1*8,2,2)
-	--draw rectangle
-	add_ani(2,3,3,10, 8,8*(10+2*(hubsel)), false)
+	--draw cursor
+	add_ani(2,3,3,10, 8,hub_y+hub_oy, false)
 	drawmessage()
+	--draw rectangle
 	for i=1,3 do
 		local t =""
-		local colr=3
-		local ys=8*(10+2*(i-1))
+		local colr=3--dark green
+		local ys=8*(10+2*(i-1))--10,12,14
 		if i==(hubsel+1) then
-			colr=11
-			rectfill2(26,ys,80,7,3)
+			colr=11--light green (for text)
+			rectfill2(26,hub_y+hub_oy,80,7,3)
 		end
 		if completedworlds[i]==1 then
+			--draw red cross
 			line(8*2,ys,8*3-1,ys+7,8)
 			line(8*3-1,ys,8*2,ys+7,8)
-			colr=5
+			colr=5--dark grey (closed server)
 			t=" [error 404]"
 		end
 		print(servertext[i]..t,26,ys+1,colr)
-		local colr=3
 	end
 	draw_bas_ani()
 	drawgrids()
@@ -901,7 +931,7 @@ end
 function movebox()
 	pushto=mget(slbx.x+slbx.dx,slbx.y+slbx.dy)
 	--IF WALL
-	slbx.mov = boxslide
+	slbx.mov=boxslide
 	if fget(pushto,0) or checkbox(slbx.x+slbx.dx,slbx.y+slbx.dy) then
 		sfx(61) -- wall noise
 		slbx.mov=boxbump
@@ -950,8 +980,6 @@ function boxbump(p_t)
 	slbx.ox=slbx.sox*tme
 	slbx.oy=slbx.soy*tme
 end
-
--->8
 
 -->8
 --particles
