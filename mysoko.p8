@@ -14,6 +14,7 @@ function _init()
 	fadeperc=1
 	debug={}
 	cam_x,cam_y=0,0
+	p_x,p_y=22,10
 	level=0--start level 1 less
 	servertext={"server 1","server 2","server 3"}
 	p_ani=112
@@ -70,7 +71,7 @@ function _init()
 	
 	--scanline stuff
 	showscan=true
-	yscan=39
+	yscan=38
 	yscanstart=38
 	yscanend=120 -- -42+1
 	
@@ -79,25 +80,19 @@ function _init()
 end
 
 function init_level()
+	yscan=yscanstart
 	goal={}
 	box={}
-	buttbuff=-1
-	p_x,p_y=22,10
+	buttbuff=-1	
 	p_ox,p_oy=0,0--PLAYER OFFSET
 	--OFFSET ALLOWS PLAYER TO SLIDE
 	--INTO A GIVEN SPOT WITHOUT
-	--LOSING POSITION	
-	
+	--LOSING POSITION		
 	p_flp=false
 	p_mov=nil
 	p_t=0--ANIMATION TIMER (0 TO 1)
-	
-	wind={}--WINDOW ARRAY
-	talkwind=nil
-
 	_upd=upd_level
 	_drw=drw_level
-	
 	--music(32,1000)
 end
 -->8
@@ -111,16 +106,11 @@ function _update()
 end 
 
 function upd_game()
-	if talkwind then
- 	if	getinput()==5 then
-			talkwind.dur=0--close box
-			talkwind=nil
-		end
-	else
-		btn_buffer()
-		do_btn_buffer(buttbuff)
-		buttbuff=-1
-	end
+
+	btn_buffer()
+	do_btn_buffer(buttbuff)
+	buttbuff=-1
+
 	if notrestart then
 		if checksolved() then
 			--end of world
@@ -288,7 +278,6 @@ function _draw()
 	grids={}
 	anims={}
 	_drw()
-	drawind()
 	checkfade()
 	--draw debug
 	local offst=0
@@ -344,9 +333,10 @@ end
 -->8
 --gameplay
 
-function moveplayer(dx,dy)
+function moveplayer(dx,dy)--direction x and y are either 0, 1, or -1
 	local newpx=p_x+dx
 	local newpy=p_y+dy	
+	
 	--removed p_flip stuff
 
 	--planned tile to move to
@@ -394,7 +384,11 @@ end
 --to animate
 function upd_p_loop()
 	btn_buffer()
-	--trail particle
+	-- debug[1]=p_x.." "..p_y
+	-- debug[2]=flr(p_ox).." "..flr(p_oy)
+	-- debug[3]=p_sox.." "..p_soy
+	-- debug[4]=t
+	--wall animations
 	if p_sox==0 then
 		if p_wall then
 			p_ani=p_anims[3]--bump wall
@@ -409,9 +403,10 @@ function upd_p_loop()
 		end
 	end
 	p_t=min(p_t+0.3,1)
-	p_mov() --moves the player offset by
-	spawntrail(p_x*8+p_ox+4,p_y*8+p_oy+4)
 
+	p_mov() --moves the player offset by
+	--trail particle
+	particletrail(p_x*8+p_ox,p_y*8+p_oy)
 	if p_t==1 then
 		--call slide box
 		p_ani=p_anims[1]--normal
@@ -424,7 +419,7 @@ end
 
 function pslide()
 	p_ox=p_sox*(1-p_t)
-	p_oy=p_soy*(1-p_t)	
+	p_oy=p_soy*(1-p_t)
 end
 
 function pbump()
@@ -463,10 +458,40 @@ end
 
 function restartlevel()
 	level-=1
-	fadeout(1)
-	reload(0x1000, 0x1000, 0x2000)
+	particleshatter(p_x*8,p_y*8)
+	--fadeout(1)
+	init_codeslide()
 	notrestart=false
-	init_level()
+	
+end
+
+function init_codeslide()
+	--set the offset counter
+	p_sox=(p_x-plx[level+1])*8--used to set p_ox (starting offset)
+	p_soy=(p_y-ply[level+1])*8--used to set p_oy
+	--set player to starting location
+	p_x=plx[level+1]--add+1 later
+	p_y=ply[level+1]
+	p_ox,p_oy=p_sox,p_soy
+	p_mov=pslide
+	_upd=upd_codeslide--set player loop
+	p_t=0
+end
+
+function upd_codeslide()
+	btn_buffer()
+	p_t=min(p_t+0.2,1)
+	p_ani=72
+	p_mov() --moves the player offset by
+	--trail particle
+	particlecode(p_x*8+p_ox,p_y*8+p_oy)
+	if p_t==1 then
+		--call slide box
+		p_ani=p_anims[1]--normal
+		_upd=upd_game
+		init_level()
+		reload(0x1000, 0x1000, 0x2000)
+	end
 end
 
 function checksolved()
@@ -477,7 +502,7 @@ function checksolved()
 			if not g.flg then
 				g.flg = true
 				sfx(55)
-				shatterparticle(g.x*8,g.y*8)
+				particleshatter(g.x*8,g.y*8)
   	end
 		else
 			mset(g.x,g.y,g.gf)
@@ -543,58 +568,21 @@ function upd_level()
 end
 -->8
 --ui and juice
+function draw_scanline()
+	--(_x,_y,_w,_h,_c)
+	if showscan then
+		rectfill2(cam_x+6,cam_y+yscan,116,1,3)
 
-function addwind(_x,_y,_w,_h,_txt)
-	local w={x=_x,y=_y,w=_w,h=_h,txt=_txt}
-	add(wind,w)
-	return w
-end
-
-function drawind()
-	for w in all(wind) do
-		local wx,wy,ww,wh=w.x,w.y,w.w,w.h
-		rectfill2(wx,wy,ww,wh,0)		
-		rect(wx+1,wy+1,wx+ww-2,wy+wh-2,6)
-		--text offset
-		wx+=4
-		wy+=4
-		clip(wx,wy,ww-8,wh-8)
- 	for i=1,#w.txt do
-			local txt=w.txt[i]
-			print(txt,wx,wy,11)
-			wy+=6--next line of text
-		end
-		
-		clip()--reset clip
-		
-		--closing window
-		if w.dur!=nil then
-			w.dur-=1
-			if w.dur<=0 then
-				local dif=wh/4--close amnt
-				w.y+=dif/2
-				w.h-=dif
-				if wh<1 then
-					del(wind,w)
-				end
-			end
+		showscan = false
+	else
+		showscan = true
+		if yscan >= yscanend then
+			yscan = yscanstart
 		else
-			if w.butt then
-				oprint8("❎",wx+ww-15,wy-1+sin(time()),6,0)
-			end
+			yscan+=1
 		end
+		showscan=true
 	end
-end
-
-function showmsg(txt,dur)
- local wid=(#txt+2)*4+7
- local w=addwind(63-wid/2,50,wid,13,{" "..txt})
- w.dur=dur
-end
-
-function showmsg(txt)
- talkwind=addwind(16,50,94,#txt*6+7,txt)
- talkwind.butt=true
 end
 
 function dofade()
@@ -786,7 +774,7 @@ function upd_box_loop()
 	btn_buffer()
 	p_t=min(p_t+.4,1)
 	slbx.mov(p_t)
-	spawntrail(
+	particletrail(
 	slbx.x*8+slbx.ox+4,
 	slbx.y*8+slbx.oy+4)
 	
@@ -936,20 +924,20 @@ function addpart(_x,_y,_dx,_dy,_type,_maxage,_col)
 	_p.mage=_maxage
 	_p.age=0
 	_p.col=0--also sprite val
-	_p.c0larr=_col
+	_p.color_array=_col
 
 	add(part,_p)
 end
 --4:19
 -- spawn a trail
-function spawntrail(_x,_y)
+function particletrail(_x,_y)
 	if rnd()<0.5 then
 		local _ang=rnd()
 		local _ox=sin(_ang)*2*.6
 		local _oy=cos(_ang)*2*.6
 		addpart(
-			_x+_ox,
-			_y+_oy,
+			_x+_ox+4,
+			_y+_oy+4,
 			0,--dx
 			0,--dy
 			0,--type
@@ -959,9 +947,27 @@ function spawntrail(_x,_y)
 	end
 end
 
+function particlecode(_x,_y)
+	for i=1,10 do
+		local _ang=rnd()
+		local _ox=sin(_ang)*2*.6
+		local _oy=cos(_ang)*2*.6
+		addpart(
+			_x+_ox+4,
+			_y+_oy+4,
+			0,--dx
+			0,--dy
+			1,--type
+			20,--age
+			{7,11,3}
+		)
+	end
+
+end
+
 
 --place brick in slot
-function shatterparticle(x,y)
+function particleshatter(x,y)
 	for i=0,10 do
 		local _ang=rnd()
 		local _dx=sin(_ang)*1
@@ -992,14 +998,14 @@ function updateparts()
 		--change col to old col
 		else
 		 -- change colors
-			if #_p.c0larr==1 then
-				_p.col = _p.c0larr[1]
+			if #_p.color_array==1 then
+				_p.col = _p.color_array[1]
 			end
 			--AGPERC 0->1
 			--FLR(PERCENT*#ARRAY)
 			-- = THE INDEX OF THE COLOR
-			local _ci =1+flr(agperc*#_p.c0larr)
-			_p.col = _p.c0larr[_ci]
+			local _ci =1+flr(agperc*#_p.color_array)
+			_p.col = _p.color_array[_ci]
 		end
 		
 		--apply gravity to shatter
@@ -1023,40 +1029,6 @@ function drawparts()
 	end
 end
 
-
--->8
-function draw_scanline()
-	--(_x,_y,_w,_h,_c)
-	if showscan then
-		rectfill2(cam_x+6,cam_y+yscan,116,1,3)
-
-		showscan = false
-	else
-		showscan = true
-		if yscan >= yscanend then
-			yscan = yscanstart
-		else
-			yscan+=1
-		end
-		showscan=true
-	end
-
-	-- if scanline==nil then scanline=36 end
-	-- if scanline_visible then
-	-- 	for i=0,127 do
-	-- 		if pget(i,scanline)==11 then
-	-- 			pset(i,scanline,3)
-	-- 		end
-	-- 	end
-	-- 	scanline_visible=false
-	-- else
-	-- 	scanline_visible=true		
-	-- 	scanline+=1
-	-- 	if scanline>58 then
-	-- 		scanline=32
-	-- 	end
-	-- end
-end
 __gfx__
 000000000000000000000000000000000000000001000010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee4ee4eeeeee3bbbbbb3eeeeeeee00000000
 000000000000000000003000000000000666666001000010e55555eeee6ee6eee656565eeeddddeee3eeee3eee5554ee4e4eeeeeb3bbbb3beeeeeeee00000000
@@ -1147,11 +1119,11 @@ __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1213131313131313131313131313131400121313131313131313131313131313140012131313131313131313131313131314001213131313131313131313131313131400121313131313131313131313131313140012131313131313131313131313131314001213131313131313131313131313131400000000000000000000
-2200000000001010101010000000002400220000000000100010000000000000240022000000000010000000000000000024002200000000001000000000000000002400220000000000100010000000000000240022000000000010000010100000000024002202000000000000000000000000002400000000000000000000
-22000000000010000000100000000024002208000000001000000000000000002400220a000000001000000000000000002400220a000000001000000000000000002400220b000000001000000000000000002400220c0000000010000000000000000024002200000000000000000000000000002400000000000000000000
-22000000101010000800100000000024002218000000001000000000000000002400221a000000001000000000000000002400221a000000001000000000000000002400221b000000001000000000000000002400221c0000000010000000000000000024002200000000000000000000000000002400000000000000000000
-2200000010000000080010000000002400220000000000100000000000000000240022000000000010000000000000000024002200000000001000000000000000002400220000000000100000000000000000240022000000000010000000000000000024002200000000000000000000000000002400000000000000000000
-2200000010000000080010000000002400220000000000100000000000000000240022000000000010000000000000000024002200000000001000000000000000002400220000000000100000000000000000240022000000000010000000000000000024002200000000000000000000000000002400000000000000000000
+2200000000001010101010000000002400220000000000000000000000000000240022000000000010000000000000000024002200000000001000000000000000002400220000000000100010000000000000240022000000000010000010100000000024002202000000000000000000000000002400000000000000000000
+22000000000010000000100000000024002200000000000000000000000000002400220a000000001000000000000000002400220a000000001000000000000000002400220b000000001000000000000000002400220c0000000010000000000000000024002200000000000000000000000000002400000000000000000000
+22000000101010000800100000000024002200000000000000000000000000002400221a000000001000000000000000002400221a000000001000000000000000002400221b000000001000000000000000002400221c0000000010000000000000000024002200000000000000000000000000002400000000000000000000
+2200000010000000080010000000002400220000000000000000000000000000240022000000000010000000000000000024002200000000001000000000000000002400220000000000100000000000000000240022000000000010000000000000000024002200000000000000000000000000002400000000000000000000
+2200000010000000080010000000002400220000000000000000000000000000240022000000000010000000000000000024002200000000001000000000000000002400220000000000100000000000000000240022000000000010000000000000000024002200000000000000000000000000002400000000000000000000
 2200000010101000181010000000002400220000000000000000000000000000240022000000000000000000000000000024002200000000008800000000000000002400220000000000000000000000000000240022000000000000000000000000000024002200000000000000000000000000002400000000000000000000
 2200000000001000181000000000002400220000000000000000000000000000240022000000000000000000000000000024002200000000000000000000000000002400220000000000000000000000000000240022000000000000000000000000000024002200000000000000000000000000002400000000000000000000
 2200000000001000181000000000002400220000000000000000000000000000240022000000000000000000000000000024002200000000000000000000000000002400220000000000000000000000000000240022000000000000000000000000000024002200000000000000000000000000002400000000000000000000
