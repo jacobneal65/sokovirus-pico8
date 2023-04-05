@@ -11,6 +11,11 @@ __lua__
 
 function _init()
 	
+	--screen shake variables
+	intensity = 0
+	shake_control = 2
+
+	--game timer
 	t=0
 	fadeperc=1
 	debug={}
@@ -103,6 +108,7 @@ end
 --update
 
 function _update()
+	if intensity > 0 then shake() end
 	t+=1--where we are in the anim
 	_upd()
 	--update particles
@@ -478,6 +484,7 @@ function restartlevel()
 end
 
 function init_codeslide()
+	intensity += shake_control--set the camera to shake
 	sfx(60)
 	--set the offset counter
 	p_sox=(p_x-plx[level])*8--used to set p_ox (starting offset)
@@ -582,6 +589,23 @@ function upd_level()
 end
 -->8
 --ui and juice
+
+function shake()
+	local shake_x=rnd(intensity) - (intensity /2)
+	local shake_y=rnd(intensity) - (intensity /2)
+  
+	--offset the camera
+	camera( shake_x + cam_x, shake_y + cam_y)
+  
+	--ease shake and return to normal
+	intensity *= .9
+	if intensity < .3 then 
+		intensity = 0 
+		camera(cam_x,cam_y)
+	end
+  end
+
+
 function draw_scanline()
 	--(_x,_y,_w,_h,_c)
 	if showscan then
