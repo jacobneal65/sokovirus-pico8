@@ -816,15 +816,25 @@ function hubinput()
 		if completedworlds[hubsel+1]==1 then
 			sfx(61)--cant choose world
 		else
-			
+
+			for i=0,7 do
+				particlepuff(26+i*10, hub_y+hub_oy)	
+			end
 			sfx(51)--select noise
 			level=hubsel*4+1
-			--level=8-- (used for debuging)
-			init_level()
-			fadeout()
+			_upd = upd_wait_for_particle
 		end
 	end
 end
+
+function upd_wait_for_particle()
+	if #part <= 0 then
+		--level=8-- (used for debuging)
+		init_level()
+		fadeout()
+	end
+end
+
 function init_hubmove()
 	p_t=0
 	--if we are going from 0->2 or 2->0
@@ -846,6 +856,7 @@ function upd_hubcursor_loop()
 	hub_oy=hub_soy*(1-p_t)
 	--particles
 	particlerectangle(26, hub_y+hub_oy,80)
+	
 	
 	--shake
 
