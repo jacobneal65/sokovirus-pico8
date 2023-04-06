@@ -57,8 +57,8 @@ function _init()
 	notrestart=true--skip check solved if restart
 	--player location given the level
 
-	boxtles={6,7,8,9}
-	goaltles={22,23,24,25}
+	boxtles={6,7,8,9,10,11,12}
+	goaltles={22,23,24,25,26,27,28}
 
 	dpal={0,1,1,2,1,13,6,4,4,9,3,13,1,13,14}
 
@@ -332,7 +332,7 @@ end
 
 function oprint8(_t,_x,_y,_c,_c2)
 	for i=1,8 do
-		print(_t,_x+dirx[i],_y+diry[i],_c2)		
+		print(_t,_x+1,_y+diry[i],_c2)		
 	end
 	print(_t,_x,_y,_c)
 end
@@ -340,7 +340,10 @@ end
 function rectfill2(_x,_y,_w,_h,_c)
 	rectfill(_x,_y,_x+max(_w-1,0),_y+max(_h-1,0),_c)
 end
-
+function rrectfill2(_x,_y,_w,_h,_c)
+	rectfill2(_x,  _y+1,_w,_h-2,_c)
+	rectfill2(_x+1,_y  ,_w-2,_h,_c)
+     end
 
 function wait(_wait)
  repeat
@@ -503,7 +506,7 @@ function upd_codeslide()
 	p_t=min(p_t+0.1,1)
 	p_ani=p_anims[4]
 	p_mov() --moves the player offset by
-	particlecode(p_x*8+p_ox,p_y*8+p_oy)--code trail particle
+	particlecode(p_x*8+p_ox,p_y*8+p_oy,15,{7,11,3})--code trail particle
 	if p_t==1 then
 		particlepuff(p_x*8,p_y*8)
 		--call slide box
@@ -685,8 +688,10 @@ function init_menu()
 
 	_upd=upd_menu
 	_drw=drw_menu
+	
 end
 
+--might not use opening message
 function updatemessage()
 	if (frame%msg.rate==0) then
 		msg.pos+=1
@@ -695,7 +700,14 @@ function updatemessage()
 end
 
 function upd_menu()
-	updatemessage()
+	--updatemessage()
+	--create particles
+	for i=1,3 do
+		local rx = rnd(104)--random place to start rain
+		local ry = rnd(100)
+		local age = rnd(50)+10 -- age of particle
+		particlecode(8+rx,10+ry,age,{7,11,3,1})
+	end
 	if btnp(❎) then
 		sfx(47)--start game
 		fadeout()
@@ -704,23 +716,30 @@ function upd_menu()
 	end
 end
 
+
+
 function drw_menu()
 	cls()
-	drawmessage()
-	oprint8("press ❎ to start",30,80+sin(time()),7,13)
-
+	-- drawmessage()
+	drawparts()--particles
+	rrectfill2(25,73,78,18,6)--outline
+	rrectfill2(26,74,76,16,0)--center
+	oprint8("press ❎ to start",30,80+sin(time()),7,1)
+	
 end
 
+
+--might not use opening message
 function drawmessage()
 	offset=0
 	y=0
 
 	if(frame%msg.rate==0 and msg.pos<msg.len) then
-		if sfx1 then
-			sfx(50)--choose menu
-		else
-			sfx1=true
-		end
+		-- if sfx1 then
+		-- 	sfx(50)--type noise
+		-- else
+		-- 	sfx1=true
+		-- end
 	end
 	for l in all(msg.lines) do
 		off=msg.pos-offset
@@ -739,6 +758,7 @@ function drawmessage()
 	end
 end
 
+--might not use opening message
 function setmsg(lines)
 	msg.lines=lines
 	msg.pos=0
@@ -780,6 +800,7 @@ end
 
 
 function init_hub()
+	hub_shakex,hub_shakey=0,0
 	hubsel=0
 	hub_x, hub_y=0,8*(10+2*hubsel)
 	hub_oy=0
@@ -816,9 +837,10 @@ function hubinput()
 		if completedworlds[hubsel+1]==1 then
 			sfx(61)--cant choose world
 		else
-
+			intensity += shake_control--set the camera to shake
 			for i=0,7 do
 				particlepuff(26+i*10, hub_y+hub_oy)	
+				particleshatter(26+i*10, hub_y+hub_oy)	
 			end
 			sfx(51)--select noise
 			level=hubsel*4+1
@@ -854,12 +876,12 @@ function upd_hubcursor_loop()
 	--slide
 	p_t=min(p_t+0.4,1)
 	hub_oy=hub_soy*(1-p_t)
+
 	--particles
 	particlerectangle(26, hub_y+hub_oy,80)
 	
 	
-	--shake
-
+	
 	--return hub control
 	if p_t==1 then
 		_upd = upd_hub
@@ -1034,7 +1056,7 @@ function particletrail(_x,_y)
 	end
 end
 
-function particlecode(_x,_y)
+function particlecode(_x,_y,_age,_col)
 	for i=1,10 do
 		local _ang=rnd()
 		local _ox=sin(_ang)*2*.6
@@ -1046,8 +1068,8 @@ function particlecode(_x,_y)
 			0,--dy
 			1,--type
 			0,--radius
-			15,--age
-			{7,11,3}
+			_age,--age
+			_col
 		)
 	end
 end
@@ -1112,8 +1134,6 @@ function updateparts()
 		local agperc=_p.age/_p.mage--AGPERC 0->1
 		if _p.age > _p.mage then
 			del(part,part[i])
-		--if the particle is halfage,
-		--change col to old col
 		else
 		 -- change colors
 			if #_p.color_array==1 then
@@ -1141,7 +1161,6 @@ function updateparts()
 			-- 	_p.r=0
 		end
 
-		
 		--move particle
 		_p.x+=_p.dx
 		_p.y+=_p.dy
