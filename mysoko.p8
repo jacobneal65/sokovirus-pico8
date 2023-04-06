@@ -54,7 +54,6 @@ function _init()
 		">your pay will be $_,___."},
 	}
 	
-	notrestart=true--skip check solved if restart
 	--player location given the level
 
 	boxtles={6,7,8,9,10,11,12}
@@ -77,15 +76,11 @@ function _init()
 	
 	--particles
 	part={}
-	
-	
-
 	--scanline stuff
 	showscan=true
 	yscan=38
 	yscanstart=38
 	yscanend=120 -- -42+1
-	
 	init_menu()
 	
 end
@@ -124,7 +119,6 @@ function upd_game()
 	do_btn_buffer(buttbuff)
 	buttbuff=-1
 
-	if notrestart then
 		if checksolved() then
 			--end of world
 			if level%worldlevels == 0 then
@@ -148,9 +142,7 @@ function upd_game()
 			fadeout(0.5)
 			sfx(54)--end level
 		end
-	else
-		notrestart=true
-	end
+
 end
 
 -->8
@@ -481,10 +473,7 @@ end
 
 function restartlevel()
 	particlepuff(p_x*8,p_y*8)
-	--fadeout(1)
 	init_codeslide()
-	notrestart=false
-	
 end
 
 function init_codeslide()
@@ -711,15 +700,19 @@ function upd_menu()
 		particlecode(8+rx,10+ry,age,{7,11,3,1})
 	end
 	if btnp(❎) then
-		music(-1)
+		_upd=upd_wait_menu_particle
 		sfx(47)--start game
-		fadeout()
-		init_hub()
+		music(-1)
 		
 	end
 end
 
-
+function upd_wait_menu_particle()
+	if #part <= 0 then
+		init_hub()
+		fadeout()
+	end
+end
 
 function drw_menu()
 	cls()
@@ -743,17 +736,16 @@ function drw_menu()
 end
 
 
---might not use opening message
 function drawmessage()
 	offset=0
 	y=0
 
 	if(frame%msg.rate==0 and msg.pos<msg.len) then
-		-- if sfx1 then
-		-- 	sfx(50)--type noise
-		-- else
-		-- 	sfx1=true
-		-- end
+		if sfx1 then
+		 	sfx(50)--type noise
+		else
+			sfx1=true
+		end
 	end
 	for l in all(msg.lines) do
 		off=msg.pos-offset
