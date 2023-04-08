@@ -747,7 +747,7 @@ function upd_menu()
 		local rx = rnd(104)--random place to start rain
 		local ry = rnd(100)
 		local age = rnd(50)+10 -- age of particle
-		particlecode(8+rx,10+ry,age,{7,11,3,1})
+		particlecode(8+rx,10+ry,age,{11,3,1})
 	end
 
 	if menucountdown<0 then
