@@ -724,8 +724,9 @@ function init_menu()
 		">failure is not an option.",
 	     }
 	setmsg(lines)
-	
-	wnd={l=10,t=10}     
+	menu_timer = 200--used for menu animations
+	menu_anim = true--used for menu animations
+
 	_upd=upd_menu
 	_drw=drw_menu
 	
@@ -748,6 +749,7 @@ function upd_menu()
 		local age = rnd(50)+10 -- age of particle
 		particlecode(8+rx,10+ry,age,{7,11,3,1})
 	end
+
 	if menucountdown<0 then
 		if btnp(❎) then
 			sfx(47)--start game
@@ -774,25 +776,37 @@ function drw_menu()
 	drawparts()--particles
 
 	--draw splash image
-	rrectfill2(30,27,69,24,6)--outline
-	rrectfill2(31,28,67,22,0)--center
-	sdrawgrid(103,32,31,8,2)
+	rrectfill2(30+menu_timer,27,69,24,6)--outline
+	rrectfill2(31+menu_timer,28,67,22,0)--center
+	sdrawgrid(103,32+menu_timer,31,8,2)--(stspr,_x,_y,_w,_h)
 	
 	--character
-	rrectfill2(54,52,20,20,6)--outline
-	rrectfill2(55,53,18,18,0)--center
-	--(_sa,_ea,_delay,_spd,_x,_y,_flp)
-	add_ani(p_ani,p_ani+3,16,4,60,58,false)
+	rrectfill2(54-menu_timer,52,20,20,6)--outline
+	rrectfill2(55-menu_timer,53,18,18,0)--center
+	
+	add_ani(p_ani,p_ani+3,16,4,60-menu_timer,58,false)--(_sa,_ea,_delay,_spd,_x,_y,_flp)
 
 	--menu prompt
-	rrectfill2(25,73,78,18,6)--outline
-	rrectfill2(26,74,76,16,0)--center
-	oprint8("press ❎ to start",30,80+sin(time()),blinkcolor,1)
+	rrectfill2(25+menu_timer,73,78,18,6)--outline
+	rrectfill2(26+menu_timer,74,76,16,0)--center
+	oprint8("press ❎ to start",30+menu_timer,80+sin(time()),blinkcolor,1)
 	palt(0,false)
 	palt(14,true)
 	draw_bas_ani()
 	palt(0,true)
 	palt(14,false)
+
+	if menu_anim then
+		if menu_timer < 0 then
+			menu_timer += 2
+			if menu_timer == 0 then
+				menu_anim = false
+			end
+		
+		elseif menu_timer > -32 then
+			menu_timer -= 4
+		end
+	end
 end
 
 
