@@ -36,7 +36,7 @@ function _init()
 	plx={19,37,59,73,87,106,6,22,41,54,69,86}
 	ply={9,10,12,7,10,9,25,22,22,25,21,21}
 	
-	newstext = "breaking news: an unknown virus is sweeping the city. close your doors citizens!"
+	newstext = "breaking news: an unknown computer virus is sweeping the city. lock your pc!"
 
 	hubtext = {
 		{">password: **********",
@@ -996,7 +996,7 @@ end
 
 function upd_wait_for_particle()
 	if #part <= 0 then
-		level=10-- (used for debuging)
+		--level=10-- (used for debuging)
 		init_level()
 		fadeout()
 	end
