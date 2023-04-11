@@ -1120,7 +1120,7 @@ function drw_hub()
 	rectfill2(1*8-3,3,14*8+6,10,6)
 	rectfill2(1*8-2,4,14*8+4,8,1)
 	if completedworlds[2]==1 then --break news server
-		print("bre0k1n8 n@w$: )(^$★+=_🐱🐱",1*8-2,6,7)
+		print("bre0k1n8 n@w$: )(^$★+=_🐱🐱",1*8-2,6,8)
 	else
 		txtscroll(newstext,1*8-2,6,14*8+4,2,7)
 	end
@@ -1213,18 +1213,21 @@ function drw_stats()
 	print("total steps: "..totalsteps,34,48,3)
 	
 	local lvl = 1
-	local completed = "★"
+	local completed = "★ optimal"
+	local col = 12
 	for i = 1,3 do
 		if steps[lvl]>0 then
 			for i = 0,3 do
 				if steps[lvl+i]>optsteps[lvl+i] and steps[lvl+i]>0 then
-					completed = "😐 nope"
+					completed = "😐 no reward"
+					col = 9
 				end
 			end
 		else
 			completed=""	
 		end
-		print("server "..i..": "..completed,8,40+i*9*2,11)
+		print("server "..i..": ",8,40+i*9*2,11)
+		print(completed,46,40+i*9*2,col)
 		local steptext = ""
 		for i=0,3 do
 			steptext = steptext.." "..steps[lvl+i].."/"..optsteps[lvl+i]
