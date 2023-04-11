@@ -1,4 +1,4 @@
-# sokoban game pico8
+# SokoVirus
  
 It is a simple sokoban game about a little virus and the crazy adventures he goes on.
 
