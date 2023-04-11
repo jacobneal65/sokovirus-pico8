@@ -1,6 +1,6 @@
-# SokoVirus
+# SokoVirus Pico-8
  
-It is a simple sokoban game about a little virus and the crazy adventures he goes on.
+This is a simple sokoban game on Pico-8 about a little virus and the crazy adventures he goes on.
 
 Controls:
 operate the menus/restart level with the O button.
