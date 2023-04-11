@@ -10,7 +10,7 @@ __lua__
 --the code was edited with an
 --external editor near the end,
 --so i don't promise it is
---organized well
+--organized well 웃
 
 --blank desktop=(102*8,16*8)
 
@@ -896,6 +896,14 @@ function init_menu()
 	menu_timer = 200--used for menu animations
 	menu_anim = true--used for menu animations
 
+	menuoptions={
+		"continue game",
+		"start new game",
+		"play a level"
+	}
+	menutext=""
+	menuselect=0
+	
 	_upd=upd_menu
 	_drw=drw_menu
 	
@@ -920,11 +928,17 @@ function upd_menu()
 	end
 
 	if menucountdown<0 then
-		if btnp(4) then
+		local _btn = getinput()
+		if _btn==4 then
+			--menuselect
 			sfx(47)--start game
 			music(-1)--stop music
 			blinkspeed=1
-			menucountdown=20			
+			menucountdown=20	
+		elseif _btn==0 then --left
+		
+		elseif _btn==1 then --right
+
 		end
 	else
 		menucountdown-=1
@@ -956,9 +970,13 @@ function drw_menu()
 	add_ani(p_ani,p_ani+3,16,4,60-menu_timer,58,false)--(_sa,_ea,_delay,_spd,_x,_y,_flp)
 
 	--menu prompt
-	rrectfill2(25+menu_timer,73,78,18,6)--outline
-	rrectfill2(26+menu_timer,74,76,16,0)--center
-	oprint8("press 🅾️ to start",30+menu_timer,80+sin(time()),blinkcolor,1)
+	--(_x,_y,_w,_h,_c)
+	rrectfill2(14+menu_timer,73,100,18,6)--outline
+	rrectfill2(15+menu_timer,74,98,16,0)--center
+	oprint8(menutext,30+menu_timer,80+sin(time()),blinkcolor,1)
+
+	oprint8("➡️",102+menu_timer,80,3,1)
+	oprint8("⬅️",17+menu_timer,80,3,1)
 	palt(0,false)
 	palt(14,true)
 	draw_bas_ani()
