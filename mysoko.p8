@@ -1,10 +1,8 @@
 pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
--- sokovirus
--- by olivander65
-
---init & stargame
+--sokovirus
+--by olivander65
 
 --i hope you enjoy the game! 🐱
 --the code was edited with an
@@ -15,7 +13,7 @@ __lua__
 --blank desktop=(102*8,16*8)
 
 function _init()
-
+	mode=0 --0 for normal game, 1 for playlevel
 	completedworlds={0,0,0}
 	acheivement={0,0,0}
 	steps={0,0,0,0,0,0,0,0,0,0,0,0}
@@ -23,16 +21,15 @@ function _init()
 	totalsteps=0
 	--load cart data
 	cartdata("sokovirus")
-	
+	menuitem(1, "reset data",
+	function() clearcart() sfx(53) end
+	)
 	--load worlds and acheivements
 	for i = 1,3 do
 		completedworlds[i]=dget(i-1)--0,1,2
 		acheivement[i]=dget(i+3-1)--3,4,5
 	end
-	--load steps data
-	for i=1,12 do
-		steps[i]=dget(i+5)--6-17
-	end
+	
 	totalsteps=dget(18)
 	--load best steps
 	for i=1,12 do
@@ -41,6 +38,10 @@ function _init()
 	continue=false
 	if completedworlds[1]+completedworlds[2]+completedworlds[3]>0 then
 		continue=true
+		--load steps data
+		for i=1,12 do
+			steps[i]=dget(i+5)--6-17
+		end
 	end
 
 	--screen shake variables
@@ -117,7 +118,6 @@ function _init()
 	yscanend=120 -- -42+1
 
 	blinkframe=0--used to blink text
-	blinkspeed=10
 	blinkcolor=7
 	blinkindex=1
 	menucountdown=-1
@@ -278,19 +278,34 @@ function checkacheivement(world,start)
 end
 
 function savecart()
-	for i = 1,3 do
-		dset(i-1,completedworlds[i])--0,1,2
-		dset(i+3-1,acheivement[i])--3,4,5
+	if mode==0 then--story save
+		for i = 1,3 do
+			dset(i-1,completedworlds[i])--0,1,2
+			dset(i+2,acheivement[i])--3,4,5
+		end
 	end
-	--load steps data
+	--save steps data
 	for i=1,12 do
-		dset(i+5,steps[i])--start at 6-17
-		if steps[i]<beststeps[i] then
+		if mode == 1 then
+			dset(i+5,steps[i])--start at 6-17
+		end
+		if beststeps[i]==0 then
+			beststeps[i]=steps[i]
+			dset(i+18,steps[i])--save best steps
+		elseif beststeps[i]>steps[i] and steps[i]>0 then
+			beststeps[i]=steps[i]
 			dset(i+18,steps[i])--save best steps
 		end
 	end
 	dset(18,totalsteps)
+end
 
+function clearcart()
+	for i=0,30 do
+		dset(i,0)--reset cart data
+		--keep steps and beststeps
+	end
+	extcmd("reset")
 end
 
 function newgame()
@@ -309,33 +324,42 @@ function upd_game()
 	btn_buffer()
 	do_btn_buffer(buttbuff)
 	buttbuff=-1
-	if checksolved() then		
-		if level%4 == 0 then--end of world
-			if level<5 then
-				completedworlds[1]=1
-				checkacheivement(1,1)
-			elseif level<9 then
-				completedworlds[2]=1
-				checkacheivement(2,5)
+	if checksolved() then	
+		if mode==0 then	
+			if level%4 == 0 then--end of world
+				if level<5 then
+					completedworlds[1]=1
+					checkacheivement(1,1)
+				elseif level<9 then
+					completedworlds[2]=1
+					checkacheivement(2,5)
+				else
+					completedworlds[3]=1
+					checkacheivement(3,9)
+				end
+				wait_time=40
+				_upd=upd_wait_level_end
+				coin_puff=true
+				savecart()
+				sfx(53)--end world
 			else
-				completedworlds[3]=1
-				checkacheivement(3,9)
-			end
-			wait_time=40
-			_upd=upd_wait_level_end
-			coin_puff=true
+				intensity += shake_control--set the camera to shake
+				level+=1
+				modlvl=(level-1)%4+1
+				lock[modlvl-1]=1--unlock previous lock
+				_upd=upd_open_lock
+				savecart()
+				sfx(54)--end level
+			end		
+		elseif mode == 1 then
+			fadeout(0.5)
 			savecart()
-			sfx(53)--end world
-		else
-			intensity += shake_control--set the camera to shake
-			level+=1
-			modlvl=(level-1)%4+1
-			lock[modlvl-1]=1--unlock previous lock
-			_upd=upd_open_lock
-			savecart()
+			steps[level]=0--reset steps counter
+			reload(0x1000, 0x1000, 0x2000)
+			init_playlevel()
+			
 			sfx(54)--end level
-		end		
-		
+		end
 		
 	end
 end
@@ -452,38 +476,35 @@ function drawspr(_spr,_x,_y,_flp)
 	spr(_spr,_x,_y,1,1,_flp)	
 end
 
-function drawgamestuff()
+function drawdeskandlocks()
 	--(sa,ea,delay,spd,x,y,flp)
-	--draw player
-
-	if p_ani == p_anims[1] then
-		add_ani(p_ani,p_ani+3,4,4,p_x*8+p_ox,p_y*8+p_oy,p_flp)
-	else
-		add_ani(p_ani,p_ani,4,4,p_x*8+p_ox,p_y*8+p_oy,p_flp)
-	end
-	--monitor
-	add_ani(96,98,0,6,cam_x+3*8,cam_y+1*8,false)
-	--chord
-	add_ani(99,102,4,4,cam_x+4*8,cam_y+1*8,false)
-	--draw desk
-	sdrawgrid(45,cam_x+2*8,cam_y+1*8,3,2)
 	--lower bar
 	rectfill2(cam_x+1*8,cam_y+24,13*8+6,8,5)
 	rectfill2(cam_x+1*8+1,cam_y+25,13*8+4,6,1)
-
-
-	if coin_puff then
-		particleshatter(16*3+cam_x+5*8+4,cam_y+1*8+4,15,{7,11,3})
-		particleshatter(16*3+cam_x+5*8+4,cam_y+1*8+4,15,{7,11,3})
-		particleshatter(16*3+cam_x+5*8+4,cam_y+1*8+4,15,{7,11,3})
-		coin_puff=false			
-	end
-	if show_coin then--draw coin
-		add_grid(37,43,4,4,16*3+cam_x+5*8,cam_y+1*8,2,2)
+	--if story mode
+	if mode==0 then
+		--monitor
+		add_ani(96,98,0,6,cam_x+3*8,cam_y+1*8,false)
+		--chord
+		add_ani(99,102,4,4,cam_x+4*8,cam_y+1*8,false)
+		--draw desk
+		sdrawgrid(45,cam_x+2*8,cam_y+1*8,3,2)
+		
+		if coin_puff then
+			particleshatter(16*3+cam_x+5*8+4,cam_y+1*8+4,15,{7,11,3})
+			particleshatter(16*3+cam_x+5*8+4,cam_y+1*8+4,15,{7,11,3})
+			particleshatter(16*3+cam_x+5*8+4,cam_y+1*8+4,15,{7,11,3})
+			coin_puff=false			
+		end
+		if show_coin then--draw coin
+			add_grid(37,43,4,4,16*3+cam_x+5*8,cam_y+1*8,2,2)
+		end
 	end
 	drawgrids()--draw grid animations
 	drawparts()--particles
-	drawlock()
+	if mode==0 then
+		drawlock()
+	end
 	draw_bas_ani()--draw non-grid animations
 end
 
@@ -528,18 +549,21 @@ function drw_level()
 	for b in all(box) do
 		drawbox(b)
 	end
+	--draw player
+	if p_ani == p_anims[1] then
+		add_ani(p_ani,p_ani+3,4,4,p_x*8+p_ox,p_y*8+p_oy,p_flp)
+	else
+		add_ani(p_ani,p_ani,4,4,p_x*8+p_ox,p_y*8+p_oy,p_flp)
+	end
 	--draw everything else in the game
-	drawgamestuff()
-	drawlvltitle()
+	drawdeskandlocks()
+	print("level: "..templvl,cam_x+46,cam_y+1,3)
+	print("steps: "..steps[templvl].."/"..optsteps[templvl],cam_x+44,cam_y+26,6)
  	--RETURN TRANSPARENCY COLR
 	palt(0,true)
 	palt(14,false)
 	draw_scanline()
 	rectfill2(cam_x+2,cam_y+126,16*8-4,2,6)--lower pc (prevent showing in shake)
-end
-function drawlvltitle()
-	print("level: "..templvl,cam_x+46,cam_y+1,3)
-	print("steps: "..steps[templvl].."/"..optsteps[templvl],cam_x+44,cam_y+26,6)
 end
 
 --tool
@@ -880,6 +904,7 @@ end
 --(will move to ui when done)
 
 function init_menu()
+	blinkspeed=10
 	music(0,10)
 	frame=0
 	msg={
@@ -929,8 +954,7 @@ function updatemessage()
 	frame+=1
 end
 
-function upd_menu()
-	--updatemessage()
+function menuparticles()
 	--create particles
 	for i=1,3 do
 		local rx = rnd(104)--random place to start rain
@@ -938,7 +962,15 @@ function upd_menu()
 		local age = rnd(50)+10 -- age of particle
 		particlecode(8+rx,10+ry,age,{11,3,1})
 	end
+end
 
+function slidemenu()
+	--add slide logic
+end
+
+function upd_menu()
+	--updatemessage()
+	menuparticles()
 	if menucountdown<0 then
 		local _btn = getinput()
 		if _btn==4 then
@@ -967,14 +999,14 @@ function upd_menu()
 				elseif menuselect==2 then
 					newgame()
 				elseif menuselect==3 then
-					--level player
+					init_playlevel()
 				end
 			else
 				--new game
 				if menuselect==1 then
 					newgame()
 				elseif menuselect==2 then
-					--level player
+					init_playlevel()
 				end
 			end
 			
@@ -985,8 +1017,6 @@ end
 
 function drw_menu()
 	cls()
-	-- drawmessage()
-	draw_bas_ani()
 	drawparts()--particles
 
 	--draw splash image
@@ -1060,6 +1090,104 @@ function drawmessage()
 	end
 end
 
+function init_playlevel()
+	lvlsel=0
+	lvl_y=8*(lvlsel)+15
+	lvl_oy,lvl_soy=0,0
+	mode=1
+	cam_x,cam_y=0,0
+	camera(cam_x,cam_y)
+	_drw=drw_playlevel
+	_upd=upd_playlevel
+	
+end
+
+
+function upd_playlevel()
+	local _btn=getinput()
+	if _btn==⬆️ then	--up
+		prevlvlsel=lvlsel
+		lvlsel=(lvlsel-1)%12
+		sfx(52)--move cursor noise
+		init_lvlselmove()
+	elseif _btn==⬇️ then--down
+		prevlvlsel=lvlsel
+		lvlsel=(lvlsel+1)%12
+		sfx(52)--move cursor noise
+		init_lvlselmove()
+	elseif _btn==🅾️ then
+		intensity += shake_control--set the camera to shake
+		for i=0,7 do
+			particlepuff(26+i*10, lvl_y+lvl_oy,{6,5,1})	
+			particleshatter(26+i*10, lvl_y+lvl_oy,15,{11})	
+		end
+		sfx(51)--select noise
+		music(-1)
+		level=lvlsel+1
+		_upd = upd_wait_for_particle--load the level
+	elseif _btn==❎ then
+		--return to menu
+		sfx(61)--select noise
+		init_menu()
+		fadeout()
+	end
+end
+
+function init_lvlselmove()
+	p_t=0
+	--if we are going from 0->3 or 3->0
+	if (prevlvlsel == 11 and lvlsel == 0)
+	or  (prevlvlsel==0 and lvlsel==11) then
+		lvl_oy=0
+		p_t=1
+	else
+		lvl_soy=8*(prevlvlsel-lvlsel)
+		lvl_oy=lvl_soy
+	end
+	lvl_y=8*(lvlsel)+15
+	_upd = upd_lvlselcursor_loop
+end
+
+--used to move the cursors and shake them
+function upd_lvlselcursor_loop()
+	--slide
+	p_t=min(p_t+0.4,1)
+	lvl_oy=lvl_soy*(1-p_t)
+	--particles
+	particlerectangle(26,lvl_y+lvl_oy,80)
+	--return hub control
+	if p_t==1 then
+		_upd = upd_playlevel
+	end
+	 
+end
+
+
+function drw_playlevel()
+	cls(5)
+	--(_x,_y,_w,_h,_c)
+	rrectfill2(14,4,100,120,6)--outline of page
+	rrectfill2(15,5,98,118,0)--center of page
+	oprint8("select a level",hcenter("select a level"),8,11,1)
+	drawparts()--particles
+	for i=1,12 do
+		local colr=3--dark green
+		if i==(lvlsel+1) then
+			colr=11--light green (for text)
+			rectfill2(26,lvl_y+lvl_oy,80,7,3)
+		end
+			print("level "..i,26,8+i*8,colr)
+			local best = beststeps[i]
+			if best==0 then
+				best=""
+			end
+			print("score: "..best,64,8+i*8,colr)		
+	end
+	local rtxt = "press ❎ to exit"
+	print(rtxt,hcenter(rtxt),8*14+2,5)
+
+end
+
 --might not use opening message
 function setmsg(lines)
 	msg.lines=lines
@@ -1102,7 +1230,7 @@ end
 
 
 function init_hub()
-
+	mode=0--story mode
 	hubsel=0
 	hub_x, hub_y=0,8*(9+2*hubsel)
 	hub_oy,hub_soy=0,0
@@ -1123,38 +1251,6 @@ function init_hub()
 	music(24,100)--hub music
 end
 
-function hubinput()
-	local _btn=getinput()
-	if _btn==⬆️ then	--up
-		prevhubsel=hubsel
-		hubsel=(hubsel-1)%4
-		sfx(52)--move cursor noise
-		init_hubmove()
-	elseif _btn==⬇️ then--down
-		prevhubsel=hubsel
-		hubsel=(hubsel+1)%4
-		sfx(52)--move cursor noise
-		init_hubmove()
-	elseif _btn==4 then
-		if hubsel == 3 then--go to progress view
-			init_stats()
-			fadeout(0.5)
-			sfx(51)--select noise
-		elseif completedworlds[hubsel+1]==1 then
-			sfx(61)--cant choose world
-		else
-			intensity += shake_control--set the camera to shake
-			for i=0,7 do
-				particlepuff(26+i*10, hub_y+hub_oy,{6,5,1})	
-				particleshatter(26+i*10, hub_y+hub_oy,15,{11})	
-			end
-			sfx(51)--select noise
-			music(-1)
-			level=hubsel*4+1
-			_upd = upd_wait_for_particle
-		end
-	end
-end
 
 function upd_wait_for_particle()
 	if #part <= 0 then
@@ -1194,7 +1290,36 @@ end
 
 function upd_hub()
 	updatemessage()
-	hubinput()
+	local _btn=getinput()
+	if _btn==⬆️ then	--up
+		prevhubsel=hubsel
+		hubsel=(hubsel-1)%4
+		sfx(52)--move cursor noise
+		init_hubmove()
+	elseif _btn==⬇️ then--down
+		prevhubsel=hubsel
+		hubsel=(hubsel+1)%4
+		sfx(52)--move cursor noise
+		init_hubmove()
+	elseif _btn==4 then
+		if hubsel == 3 then--go to progress view
+			init_stats()
+			fadeout(0.5)
+			sfx(51)--select noise
+		elseif completedworlds[hubsel+1]==1 then
+			sfx(61)--cant choose world
+		else
+			intensity += shake_control--set the camera to shake
+			for i=0,7 do
+				particlepuff(26+i*10, hub_y+hub_oy,{6,5,1})	
+				particleshatter(26+i*10, hub_y+hub_oy,15,{11})	
+			end
+			sfx(51)--select noise
+			music(-1)
+			level=hubsel*4+1
+			_upd = upd_wait_for_particle
+		end
+	end
 end
 
 function txtscroll(txt,x,y,w,spd,c)
@@ -1216,7 +1341,6 @@ function drw_hub()
 		txtscroll(newstext,1*8-2,6,14*8+4,2,7)
 	end
 
-	
 	--draw acheivement
 	drawacheivements()
 	
@@ -1260,7 +1384,6 @@ function drw_hub()
 	end
 	draw_bas_ani()
 	drawgrids()
-	
 	draw_scanline()
 end
 
