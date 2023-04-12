@@ -38,6 +38,10 @@ function _init()
 	for i=1,12 do
 		beststeps[i]=dget(i+18)--19-30
 	end
+	continue=false
+	if completedworlds[1]+completedworlds[2]+completedworlds[3]>0 then
+		continue=true
+	end
 
 	--screen shake variables
 	intensity = 0
@@ -126,6 +130,7 @@ function _init()
 	templvl=level
 	newsworks=true
 end
+
 
 function init_level()
 	--music(32,1000)--level music
@@ -293,7 +298,11 @@ function newgame()
 		dset(i,0)--reset cart data
 		--keep steps and beststeps
 	end
-	extcmd("reset")
+	completedworlds={0,0,0}
+	acheivement={0,0,0}
+	steps={0,0,0,0,0,0,0,0,0,0,0,0}
+	init_hub()
+	
 end
 
 function upd_game()
@@ -895,19 +904,22 @@ function init_menu()
 	setmsg(lines)
 	menu_timer = 200--used for menu animations
 	menu_anim = true--used for menu animations
-
-	menuoptions={
-		"continue game",
-		"start new game",
-		"play a level"
-	}
-	menutext=""
-	menuselect=0
+	if continue then
+		menuoptions={"continue game","start new game","play a level"}
+	else
+		menuoptions={"start new game","play a level"}
+	end
 	
+	menuselect=1
+	menutext=menuoptions[menuselect]--set initial text
 	_upd=upd_menu
 	_drw=drw_menu
 	
 end
+
+function hcenter(s)
+	return 64-#s*2
+    end
 
 --might not use opening message
 function updatemessage()
@@ -930,15 +942,18 @@ function upd_menu()
 	if menucountdown<0 then
 		local _btn = getinput()
 		if _btn==4 then
-			--menuselect
 			sfx(47)--start game
 			music(-1)--stop music
 			blinkspeed=1
 			menucountdown=20	
-		elseif _btn==0 then --left
-		
-		elseif _btn==1 then --right
-
+		elseif _btn==0 and menuselect>1 then --left
+			menuselect-=1
+			menutext=menuoptions[menuselect]
+			sfx(63)
+		elseif _btn==1 and menuselect<#menuoptions then --right
+			menuselect+=1
+			menutext=menuoptions[menuselect]
+			sfx(63)
 		end
 	else
 		menucountdown-=1
@@ -946,7 +961,23 @@ function upd_menu()
 			menucountdown=-1
 			fadeout()
 			part={}--clear particles
-			init_hub()
+			if #menuoptions==3 then
+				if menuselect==1 then
+					init_hub()--continue
+				elseif menuselect==2 then
+					newgame()
+				elseif menuselect==3 then
+					--level player
+				end
+			else
+				--new game
+				if menuselect==1 then
+					newgame()
+				elseif menuselect==2 then
+					--level player
+				end
+			end
+			
 		end
 	end
 end
@@ -973,10 +1004,14 @@ function drw_menu()
 	--(_x,_y,_w,_h,_c)
 	rrectfill2(14+menu_timer,73,100,18,6)--outline
 	rrectfill2(15+menu_timer,74,98,16,0)--center
-	oprint8(menutext,30+menu_timer,80+sin(time()),blinkcolor,1)
+	oprint8(menutext,hcenter(menutext)+menu_timer,80+sin(time()),blinkcolor,1)
+	if menuselect>1 then
+		oprint8("⬅️",18+menu_timer-sin(time()*2),80,12,1)
+	end
+	if menuselect<#menuoptions then
+		oprint8("➡️",101+menu_timer+sin(time()*2),80,12,1)
+	end
 
-	oprint8("➡️",102+menu_timer,80,3,1)
-	oprint8("⬅️",17+menu_timer,80,3,1)
 	palt(0,false)
 	palt(14,true)
 	draw_bas_ani()
@@ -1265,8 +1300,9 @@ function drw_stats()
 	drawacheivements()
 	rectfill2(2,126,16*8-4,2,6)--lower pc (prevent showing in shake)
 
-	print("stats:",50,40,3)
-	print("total steps: "..totalsteps,34,48,3)
+	print("stats:",hcenter("stats:"),40,3)
+	local _ts="total steps: "..totalsteps
+	print(_ts,hcenter(_ts),48,3)
 	
 	local lvl = 1
 	local completed = "★ optimal!"
@@ -1293,8 +1329,8 @@ function drw_stats()
 		lvl=lvl+4
 		completed = "★"
 	end
-
-	print("press 🅾️ to exit",34,8*14,5)
+	local _t = "press 🅾️ to exit"
+	print(_t,hcenter(_t),8*14,5)
 	draw_scanline()
 end
 
