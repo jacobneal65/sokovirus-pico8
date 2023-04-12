@@ -33,7 +33,6 @@ function _init()
 		menustars[i]=dget(i+30)--31-33
 	end
 
-	
 	totalsteps=dget(18)
 	--load best steps
 	for i=1,12 do
@@ -47,6 +46,7 @@ function _init()
 			steps[i]=dget(i+5)--6-17
 		end
 	end
+
 
 	--screen shake variables
 	intensity = 0
@@ -255,8 +255,8 @@ function drw_gameover()
 	circfill(8*8,11*8,12,3)--inner circle
 	
 	
-
-	print("you can exit or restart cart",8,8*14,5)
+	local rtxt = "press ❎ to exit"
+	print(rtxt,hcenter(rtxt),8*14,5)
 	palt(0,false)
 	palt(14,true)
 	drawgrids()--draw grid animations
@@ -271,6 +271,9 @@ end
 function upd_gameover()
 	if rnd(10)<1 then
 		particleshatter(rnd(104),rnd(100),30,{7,10,9,1})
+	end
+	if btnp(5) then
+		init_menu()
 	end
 end
 
@@ -326,6 +329,7 @@ function newgame()
 	end
 	completedworlds={0,0,0}
 	acheivement={0,0,0}
+	reload(0x1000, 0x1000, 0x2000)--reload map
 	steps={0,0,0,0,0,0,0,0,0,0,0,0}
 	init_hub()
 	
@@ -1377,12 +1381,12 @@ function txtscroll(txt,x,y,w,spd,c)
 function drw_hub()
 	cls(5)
 	--news bar
-	rectfill2(1*8-3,3,14*8+6,10,6)
-	rectfill2(1*8-2,4,14*8+4,8,1)
+	rectfill2(1*8-3,2,14*8+6,10,6)
+	rectfill2(1*8-2,3,14*8+4,8,1)
 	if completedworlds[2]==1 then --break news server
-		print("bre0k1n8 n@w$: )(^$★+=_🐱🐱",1*8,6,8)
+		print("bre0k1n8 n@w$: )(^$★+=_🐱🐱",1*8,5,8)
 	else
-		txtscroll(newstext,1*8-2,6,14*8+4,2,7)
+		txtscroll(newstext,1*8-2,5,14*8+4,2,7)
 	end
 
 	--draw acheivement
@@ -1433,14 +1437,15 @@ end
 
 function drawacheivements()
 --draw acheivement
-	print("optional",1*8,16,6)
-	print("rewards",1*8,24,6)
+	print("optional",1*8,15,6)
+	print("rewards",1*8,23,6)
 	for i=1,3 do
-		rrectfill2(((i-1)*3+6)*8-1,2*8-2,2*8+2,17,15)--basic holder
+		rrectfill2(((i-1)*3+6)*8,14,2*8+2,17,1)--holder background
+		rrectfill2(((i-1)*3+6)*8-1,13,2*8+2,17,15)--holder
 		if acheivement[i]==1 then
-			sdrawgrid(70+i*2,((i-1)*3+6)*8,14,2,2)
+			sdrawgrid(70+i*2,((i-1)*3+6)*8,13,2,2)
 		elseif acheivement[i]==-1 then
-			rrectfill2(((i-1)*3+6)*8-1,2*8-2,2*8+2,17,6)
+			rrectfill2(((i-1)*3+6)*8-1,13,2*8+2,17,6)
 		end
 	end
 end
