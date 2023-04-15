@@ -354,7 +354,6 @@ function upd_game()
 	buttbuff=-1
 	if checksolved() then	
 		if mode==0 then--story
-
 			if level%4 == 0 then--end of world
 				if level<5 then
 					completedworlds[1]=1
@@ -382,9 +381,7 @@ function upd_game()
 			end		
 		elseif mode == 1 then--levels
 			fadeout(0.5)
-			savecart()
-			steps[level]=0--reset steps counter
-			reload(0x1000, 0x1000, 0x2000)
+			savecart()		
 			init_playlevel()
 			
 			sfx(54)--end level
@@ -744,6 +741,11 @@ function do_btn_buffer(_btn)
  	if _btn==4 then--x key
 		restartlevel()
  	end
+	if _btn==5 and mode==1 then
+		sfx(61)--select noise
+		fadeout()
+		init_playlevel()
+	end
 end
 
 function restartlevel()
@@ -807,7 +809,8 @@ end
 function upd_refresh_level()
 	local lx=levelx[level]
 	local ly=levely[level]
-	
+	steps[level]=0
+	reload(0x1000, 0x1000, 0x2000)
 	--restart lock for new world
 	if level==5 or level == 9 or level == 1 then
 		lock={0,0,0}
@@ -1110,7 +1113,8 @@ function drw_menu()
 	draw_bas_ani()
 	palt(0,true)
 	palt(14,false)
-
+	ver="v1.3"
+	print(ver,100,120,5)
 	if menu_anim then
 		if menu_timer < 0 then
 			menu_timer += 2
@@ -1191,7 +1195,6 @@ function upd_playlevel()
 		sfx(51)--select noise
 		music(-1)
 		level=lvlsel+1
-		steps[level]=0--reset steps counter
 		_upd = upd_wait_for_particle--load the level
 	elseif _btn==❎ then
 		--return to menu
@@ -1471,13 +1474,14 @@ end
 
 function init_stats()
 	music(-1)
-_upd=upd_stats
-_drw=drw_stats
+	loadsteps()
+	_upd=upd_stats
+	_drw=drw_stats
 end
 
 function upd_stats()
 	local _btn=getinput()
-	if _btn==4 then
+	if _btn==5 then
 		init_hub()
 		fadeout()
 	end
@@ -1521,7 +1525,7 @@ function drw_stats()
 		lvl=lvl+4
 		completed = "★ optimal!"
 	end
-	local _t = "press 🅾️ to exit"
+	local _t = "press ❎ to exit"
 	print(_t,hcenter(_t),8*14,5)
 	draw_scanline()
 end
