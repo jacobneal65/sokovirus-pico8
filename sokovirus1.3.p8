@@ -34,17 +34,12 @@ function _init()
 	end
 
 	totalsteps=dget(18)
-	--load best steps
-	for i=1,12 do
-		beststeps[i]=dget(i+18)--19-30
-	end
+	
 	continue=false
 	if completedworlds[1]+completedworlds[2]+completedworlds[3]>0 then
 		continue=true
 		--load steps data
-		for i=1,12 do
-			steps[i]=dget(i+5)--6-17
-		end
+		loadsteps()
 	end
 
 	
@@ -221,6 +216,11 @@ function upd_wait_level_end()
 	wait_time-=1
 end
 
+function loadsteps()
+	for i=1,12 do
+		steps[i]=dget(i+5)--6-17
+	end
+end
 
 function init_gameover()
 	--save menu stars
@@ -1154,6 +1154,10 @@ function drawmessage()
 end
 
 function init_playlevel()
+	--load best steps
+	for i=1,12 do
+		beststeps[i]=dget(i+18)--19-30
+	end
 	lvlsel=0
 	lvl_y=8*(lvlsel)+15
 	lvl_oy,lvl_soy=0,0
@@ -1187,6 +1191,7 @@ function upd_playlevel()
 		sfx(51)--select noise
 		music(-1)
 		level=lvlsel+1
+		steps[level]=0--reset steps counter
 		_upd = upd_wait_for_particle--load the level
 	elseif _btn==❎ then
 		--return to menu
