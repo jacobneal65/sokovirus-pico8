@@ -29,7 +29,7 @@ function _init()
 	--load worlds and acheivements
 	for i = 1,3 do
 		completedworlds[i]=dget(i-1)--0,1,2
-		acheivement[i]=dget(i+3-1)--3,4,5
+		acheivement[i]=dget(i+2)--3,4,5
 		menustars[i]=dget(i+30)--31-33
 	end
 
@@ -210,15 +210,7 @@ function upd_wait_level_end()
 		
 		gameover = completedworlds[1]*completedworlds[2]*completedworlds[3]
 		if gameover == 1 then
-
-			--save menu stars
-			for i=1,3 do
-				dset(i+30,max(acheivement[i],menustars[i]))--31-33
-			end
-
-			_upd=upd_gameover
-			_drw=drw_gameover
-			
+			init_gameover()
 			music(0,10)
 		else
 			init_hub()
@@ -229,6 +221,24 @@ function upd_wait_level_end()
 	wait_time-=1
 end
 
+
+function init_gameover()
+	--save menu stars
+	for i=1,3 do
+		dset(i+30,max(acheivement[i],menustars[i]))--31-33
+		menustars[i]=dget(i+30)--31-33
+	end
+	
+	--reset
+	completedworlds={0,0,0}
+	acheivement={0,0,0}
+	steps={0,0,0,0,0,0,0,0,0,0,0,0}
+	continue=false
+	savecart()
+	_upd=upd_gameover
+	_drw=drw_gameover
+end
+
 function drw_gameover()
 	cam_x=0
 	cam_y=0
@@ -236,14 +246,14 @@ function drw_gameover()
 	cls()
 	rectfill2(1*8-2,5*8-2,14*8+4,10*8+3,0)--pc background color
 	map()
-	drawacheivements()
+	drawacheivements(menustars)
 	rectfill2(2,126,16*8-4,2,6)--lower pc (prevent showing in shake)
 
 	add_ani(p_ani,p_ani+3,16,4,10,40,false)
 	print("thanks for playing!!!",22,40,11)
 	add_ani(p_ani,p_ani+3,16,4,110,40,true)
 
-	print("total steps: "..totalsteps,34,48,3)
+	print("total game steps: "..totalsteps,34,48,3)
 	
 	--(_sa,_ea,_delay,_spd,_x,_y,_flp)
 	add_grid(37,43,4,4,4*8,7*8,2,2)
@@ -332,6 +342,7 @@ function newgame()
 	reload(0x1000, 0x1000, 0x2000)--reload map
 	steps={0,0,0,0,0,0,0,0,0,0,0,0}
 	init_hub()
+	
 	
 end
 
@@ -1390,7 +1401,7 @@ function drw_hub()
 	end
 
 	--draw acheivement
-	drawacheivements()
+	drawacheivements(acheivement)
 	
 	rectfill2(1*8-2,5*8-2,14*8+4,10*8+3,0)--pc background color
 	map()
@@ -1435,16 +1446,16 @@ function drw_hub()
 	draw_scanline()
 end
 
-function drawacheivements()
+function drawacheivements(_acheiv)
 --draw acheivement
 	print("optional",1*8,15,6)
 	print("rewards",1*8,23,6)
 	for i=1,3 do
 		rrectfill2(((i-1)*3+6)*8,14,2*8+2,17,1)--holder background
 		rrectfill2(((i-1)*3+6)*8-1,13,2*8+2,17,15)--holder
-		if acheivement[i]==1 then
+		if _acheiv[i]==1 then
 			sdrawgrid(70+i*2,((i-1)*3+6)*8,13,2,2)
-		elseif acheivement[i]==-1 then
+		elseif _acheiv[i]==-1 then
 			rrectfill2(((i-1)*3+6)*8-1,13,2*8+2,17,6)
 		end
 	end
@@ -1469,12 +1480,13 @@ function drw_stats()
 	cls(5)
 	rectfill2(1*8-2,5*8-2,14*8+4,10*8+3,0)--pc background color
 	map()
-	drawacheivements()
+	drawacheivements(acheivement)
 	rectfill2(2,126,16*8-4,2,6)--lower pc (prevent showing in shake)
 
-	print("stats:",hcenter("stats:"),40,3)
-	local _ts="total steps: "..totalsteps
-	print(_ts,hcenter(_ts),48,3)
+	local _ts="total game steps: "..totalsteps
+	print(_ts,hcenter(_ts),40,3)
+	print("current run stats:",8,50,3)
+	
 	
 	local lvl = 1
 	local completed = "★ optimal!"
