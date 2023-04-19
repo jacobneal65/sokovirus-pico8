@@ -13,7 +13,7 @@ __lua__
 --blank desktop=(102*8,16*8)
 
 function _init()
-	ver="v1.4"
+	ver="v4"
 	mode=0 --0 for normal game, 1 for playlevel
 	completedworlds={0,0,0}
 	acheivement={0,0,0}
@@ -1121,7 +1121,7 @@ function drw_menu()
 	palt(0,true)
 	palt(14,false)
 	
-	print(ver,100,120,5)
+	print(ver,8,120,5)
 	slideinamim()
 
 end
