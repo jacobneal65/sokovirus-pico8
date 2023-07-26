@@ -609,7 +609,7 @@ end
 function rrectfill2(_x,_y,_w,_h,_c)--draws box with round corner
 	rectfill2(_x,  _y+1,_w,_h-2,_c)
 	rectfill2(_x+1,_y  ,_w-2,_h,_c)
-     end
+end
 
 function wait(_wait)
  repeat
@@ -978,7 +978,7 @@ function init_menu()
 	menutext=menuoptions[menuselect]--set initial text
 	--menu text moving
 	m_ox=0
-	mdx=0
+	mdx=0--menu direction x
 	reversemenu=false
 	_upd=upd_menu
 	_drw=drw_menu
