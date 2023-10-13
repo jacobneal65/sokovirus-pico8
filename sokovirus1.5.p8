@@ -13,7 +13,7 @@ __lua__
 --blank desktop=(102*8,16*8)
 
 function _init()
-	ver="v4"
+	ver="v5"
 	mode=0 --0 for normal game, 1 for playlevel
 	completedworlds={0,0,0}
 	acheivement={0,0,0}
@@ -106,7 +106,7 @@ function _init()
 	lockpuff=0
 	locktimer=0
 	
-	optsteps={30,35,65,75,100,115,60,50,50,115,100,62}--optimal steps
+	optsteps={30,35,65,75,100,115,115,50,50,115,100,62}--optimal steps
 	slbx=nil --SLIDE BOX
 	
 	--particles
@@ -285,7 +285,7 @@ function upd_gameover()
 		particleshatter(rnd(104),rnd(100),30,{7,10,9,1})
 	end
 	if btnp(5) then
-		init_menu()
+		init()
 	end
 end
 
