@@ -14,7 +14,7 @@ __lua__
 
 function _init()
 
-	ver="v5"
+	ver="v6"
 	mode=0 --0 for normal game, 1 for playlevel
 	completedworlds={0,0,0}
 	acheivement={0,0,0}
@@ -288,7 +288,7 @@ function upd_gameover()
 		particleshatter(rnd(104),rnd(100),30,{7,10,9,1})
 	end
 	if btnp(5) then
-		init()
+		_init()
 	end
 end
 
